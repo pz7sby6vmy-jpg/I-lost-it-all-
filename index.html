@@ -1099,7 +1099,7 @@ else if(msg.type==='leave'){for(const [token,c] of seatClaims)if(c.peer===conn.p
 function guestGone(id){if(!G)return;connections.delete(id);let p=G.players.find(p=>p.peerId===id&&p.human);if(!p)return;const claimed=[...seatClaims].some(([,c])=>c.peer===id);if(claimed){const seat=p.seat;setTimeout(()=>{if(G?.players[seat]?.peerId!==id)return;for(const [token,c] of seatClaims)if(c.peer===id)seatClaims.delete(token);releaseGuestSeat(id)},25000);announce(p.character+' disconnected. Holding their seat for 25 seconds.',-1,'turn');publish();return}releaseGuestSeat(id)}
 function releaseGuestSeat(id){if(!G)return;let p=G.players.find(p=>p.peerId===id&&p.human);if(!p)return;p.human=false;p.peerId=null;if(G.phase==='lobby'){announce(p.character+' left. AI takes the seat.',-1,'deal')}else if(G.phase==='betting'){if(G.turn===p.seat)scheduleAI();announce('A friend disconnected. AI takes over '+p.character+'.',-1,'turn')}publish()}
 function handleGuestMessage(msg){if(!msg||typeof msg!=='object')return;lastHostSignal=Date.now();if(msg.type==='ping'){try{hostConnection?.send({type:'pong'})}catch{};return}if(msg.type==='pong')return;if(msg.type==='rejected'){connectionIssue(msg.reason||'Could not join room.');return}if(msg.type==='welcome'){mySeat=msg.seat;live=true;joinPending=false;autoJoinAttempts=0;clearJoinTimers();startGuestHeartbeat();clearConnectionProblem();setStatus('ONLINE · ROOM '+room);$('waitNote').textContent=msg.reconnected?'Reconnected! You have your original seat.':'You joined! Wait for the host to deal. Unfilled seats will be AI.';if(G?.phase==='lobby')renderLobby();return}if(msg.type==='state'){view=msg.state;if(!view||deathShown)return;if(view.phase==='lobby'){screen('lobbyScreen');G={phase:'lobby',players:view.players};renderLobby()}else{screen('tableScreen');renderView(view)}return}if(msg.type==='closed'){toast('The host closed the room.');stopConnections();G=null;screen('menuScreen')}}
-function publicState(target){return {phase:G.phase,players:G.players.map(p=>({seat:p.seat,character:p.character,human:p.human,stack:p.stack,folded:p.folded,allIn:p.allIn,streetBet:p.streetBet,contrib:p.contrib,revealed:p.revealed,last:p.last,hole:(p.seat===target||p.revealed)?p.hole:null})),pot:G.pot,board:G.board,street:G.street,handNo:G.handNo,ante:G.ante,currentBet:G.currentBet,turn:G.turn,button:G.button,log:G.log,voice:G.voice,eventId:G.eventId,actor:G.lastActor,actionType:G.lastAction,result:G.result,winners:G.winners}}
+function publicState(target){return {phase:G.phase,players:G.players.map(p=>({seat:p.seat,character:p.character,human:p.human,stack:p.stack,folded:p.folded,allIn:p.allIn,streetBet:p.streetBet,contrib:p.contrib,revealed:p.revealed,last:p.last,hole:(p.seat===target||(p.revealed&&!p.human))?p.hole:null})),pot:G.pot,board:G.board,street:G.street,handNo:G.handNo,ante:G.ante,currentBet:G.currentBet,turn:G.turn,button:G.button,log:G.log,voice:G.voice,eventId:G.eventId,actor:G.lastActor,actionType:G.lastAction,result:G.result,winners:G.winners}}
 function publish(){if(!G)return;if(mode==='guest')return;view=publicState(mySeat);if(G.phase==='lobby'){if($('lobbyScreen').classList.contains('active'))renderLobby()}else{screen('tableScreen');renderView(view)}for(const [id,conn] of connections){if(!conn.open)continue;let target=G.players.findIndex(p=>p.peerId===id);try{conn.send({type:'state',state:publicState(target)})}catch{}}if(G.phase==='betting')scheduleAI()}
 function beginRun(){visualEventId=-1;if(mode==='guest'||!G)return;if(mode==='host'&&!live){toast('Wait until the online room is ready.');return}data.runs++;persist();clearTimeout(aiTimer);handKey++;deathShown=false;G.phase='handEnd';G.handNo=0;G.button=5;for(const p of G.players){p.stack=1000;p.hole=[];p.folded=false;p.contrib=0;p.streetBet=0;p.revealed=false;p.last='READY'}startHand()}
 function eligible(){return G.players.filter(p=>!p.folded&&p.hole.length===2)}
@@ -1686,6 +1686,7 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
  new MutationObserver(refresh).observe(table,{attributes:true,attributeFilter:['style']});
  const seats=document.getElementById('seats');if(seats)new MutationObserver(()=>{last='';refresh()}).observe(seats,{childList:true});
  refresh();
+ // Private-card toggle only changes local display. Human players' hole cards are never included in another player's state, even at showdown.
  // Personal hole cards are drawn exclusively from the current player's own view.
  const hud=document.createElement('div');hud.className='myHoleHUD revealed';hud.setAttribute('aria-label','Your private poker cards');
  hud.innerHTML='<div class="myHoleCaption">YOUR CARDS</div><div class="myHoleCards"></div>';scene.append(hud);
@@ -1722,7 +1723,7 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
   if(!window.THREE){status.textContent='3D ENGINE UNAVAILABLE — CONNECT TO INTERNET';host.querySelector('.tableWrap').style.setProperty('visibility','visible','important');return;}
   const T=THREE,renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
   const world=new T.Scene();world.background=new T.Color('#171016');world.fog=new T.Fog('#171016',12,26);
-  const camera=new T.PerspectiveCamera(65,1,.08,70);camera.position.set(0,1.64,5.35);
+  const camera=new T.PerspectiveCamera(65,1,.08,70);camera.position.set(0,1.38,2.70);
   world.add(new T.HemisphereLight(0xffd5a2,0x252335,1.4));const lamp=new T.PointLight(0xffd49b,95,13);lamp.position.set(0,4.5,0);lamp.castShadow=true;world.add(lamp);
   const mat=(c,rough=.82)=>new T.MeshStandardMaterial({color:c,roughness:rough});
   const wood=mat('#4b2b21'),felt=mat('#126544'),trim=mat('#b88b4d',.42),dark=mat('#201419'),skin=mat('#b98569'),shirt=mat('#5a2630');
@@ -1755,9 +1756,9 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
   // Dealer at the far end of the room, separate from the six player chairs.
   const dealer=new T.Group();dealer.position.set(0,0,-4.55);world.add(dealer);
   mesh(new T.CylinderGeometry(.38,.48,1.1,16),mat('#222028'),0,1.5,0,dealer);mesh(new T.SphereGeometry(.31,18,12),skin,0,2.32,0,dealer);mesh(new T.CylinderGeometry(.43,.43,.10,22),dark,0,2.63,0,dealer);
-  function resize(){const w=host.clientWidth,h=host.clientHeight;if(w<1||h<1)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<600?74:62;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(host);resize();
+  function resize(){const w=host.clientWidth,h=host.clientHeight;if(w<1||h<1)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<600?66:59;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(host);resize();
   const table=host.querySelector('.tableWrap');let yaw=0,prevYaw=NaN;
-  function update(){const raw=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;yaw=Math.max(-70,Math.min(70,-raw))*Math.PI/180;camera.rotation.set(-.17,yaw,0,'YXZ');
+  function update(){const raw=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;yaw=Math.max(-70,Math.min(70,-raw))*Math.PI/180;camera.rotation.set(-.33,yaw,0,'YXZ');
    const seats=host.querySelectorAll('.seat');for(const s of seats){const match=s.className.match(/pov([0-5])/);if(!match)continue;const b=bodies[Number(match[1])];if(!b)continue;const name=s.querySelector('.seatName')?.textContent?.trim()||'EMPTY';if(b.currentName!==name){b.currentName=name;const ctx=b.ctx;ctx.clearRect(0,0,256,64);ctx.fillStyle='#160d12';ctx.fillRect(0,0,256,64);ctx.strokeStyle='#e1ad68';ctx.lineWidth=4;ctx.strokeRect(2,2,252,60);ctx.fillStyle='#ffe0a6';ctx.font='bold 23px Arial';ctx.textAlign='center';ctx.fillText(name.slice(0,16),128,41);b.tex.needsUpdate=true;}b.g.visible=Number(match[1])!==0&&!!name&&!/empty/i.test(name);}
    const shown=host.querySelectorAll('#boardCards .pcard:not(.blank)');board.forEach((b,i)=>{b.visible=i<shown.length;});
   }
@@ -1765,6 +1766,36 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
   let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});canvas.addEventListener('pointerup',e=>{if(!down)return;const dx=e.clientX-down.x;down=null;if(Math.abs(dx)<12)return;const current=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;table.style.setProperty('--cameraYaw',Math.max(-70,Math.min(70,current+dx*.14))+'deg');});
  }
  const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js';script.onload=boot;script.onerror=()=>{status.textContent='3D ENGINE NEEDS INTERNET';host.querySelector('.tableWrap').style.setProperty('visibility','visible','important');};document.head.append(script);
+})();
+</script>
+
+<style id="poker3d-v0417-fixes">
+#tableScreen .tableScene{min-height:clamp(430px,70vw,610px)!important}
+#tableScreen .tableScene>.myHoleHUD{position:absolute!important;left:50%!important;bottom:10px!important;top:auto!important;transform:translateX(-50%)!important;z-index:45!important;display:flex!important;min-width:170px;align-items:center;pointer-events:none!important}
+#tableScreen .myHoleHUD .myHoleCaption{background:#21120ff2;font-size:12px;padding:5px 13px}
+#tableScreen .myHoleHUD .myHoleCards{display:flex!important;gap:12px;min-height:83px;align-items:center;justify-content:center}
+#tableScreen .myHoleHUD .myHoleCards .pcard{width:60px!important;height:83px!important;font-size:20px!important;box-shadow:0 4px 12px #000c}
+#tableScreen .myHoleHUD .myHoleCards .pcard b{font-size:31px!important}
+#tableScreen .myHoleHUD:not(.revealed) .myHoleCards{display:none!important}
+#tableScreen .myHoleHUD:not(.revealed){bottom:12px!important}
+#tableScreen .cardPeekControls button{background:#6b3425;color:#fff0cf}
+@media(max-width:600px){#tableScreen .tableScene{min-height:490px!important}#tableScreen .myHoleHUD .myHoleCards .pcard{width:53px!important;height:75px!important}}
+</style>
+<script id="poker3d-card-reliability-v0417">
+(function(){
+ const hud=document.querySelector('#tableScene .myHoleHUD');if(!hud)return;
+ const cards=hud.querySelector('.myHoleCards');
+ function sync(){
+  if(!document.getElementById('tableScreen')?.classList.contains('active'))return;
+  const own=document.querySelector('#seats .seat.you .seatCards');
+  if(own && own.children.length && (!cards.children.length || cards.dataset.fromSeat==='1')){
+    cards.replaceChildren(...Array.from(own.children).map(n=>n.cloneNode(true)));
+    cards.dataset.fromSeat='1';
+  }
+  if(!cards.children.length){cards.innerHTML='<div class="pcard back">★</div><div class="pcard back">★</div>';}
+ }
+ const seatRoot=document.getElementById('seats');if(seatRoot)new MutationObserver(sync).observe(seatRoot,{childList:true,subtree:true});
+ setInterval(sync,700);sync();
 })();
 </script>
 </body></html>

@@ -579,7 +579,7 @@ html,body{height:100%;}
 <strong id="connectionProblem">Unable to connect.</strong>
 <div class="recoveryButtons"><button id="retryJoinBtn" class="btn green sm" type="button" hidden>RETRY JOIN</button><button id="retryHostBtn" class="btn gold sm" type="button" hidden>NEW ROOM</button><button id="copyErrorBtn" class="btn outline sm" type="button">COPY ERROR</button></div>
 </div>
-<p class="muted" id="onlineHelp">Connection recovery: a disconnected friend's seat is reserved for 25 seconds while the game tries to reconnect. Online: host from your <b>published GitHub Pages site</b>, wait for <b>ONLINE</b>, then share the <b>invite link</b>. Keep the host tab open and wait for friends to appear before starting. Friends must load the updated game. Peer-to-peer connections may be blocked by some networks.</p>
+<p class="muted" id="onlineHelp">Connection recovery: a disconnected friend's seat is reserved for 25 seconds while the game tries to reconnect. Online: host from your <b>published GitHub Pages site</b>, wait for <b>ONLINE</b>, then share the <b>invite link</b>. Keep the host tab open and wait for friends to appear before starting. Friends must load the updated game. The multiplayer server must be online.</p>
 </div></section>
 <section id="tableScreen" class="screen"><div class="tableMain">
 <header class="hud"><div class="hudTitle">I LOST IT <em>ALL</em></div><div class="hudRight"><div class="hudPill">YOUR CHIPS <b id="hudChips">$1,000</b></div><div class="hudPill danger">YOUR DEBT <b id="hudDebt">$20,000</b></div><button class="btn sm outline" id="fullscreenBtn" type="button" aria-pressed="false" title="Fullscreen (F key)">⛶ FULLSCREEN</button><button class="btn sm outline" id="rulesBtn">RULES</button><button class="btn sm outline" id="menuBtn">MENU</button></div></header>
@@ -765,9 +765,9 @@ function screen(id){const target=$(id),changed=!target?.classList.contains('acti
 function updateDebt(){for(const id of ['menuDebt','hudDebt','lobbyDebt']){if($(id))$(id).textContent=fmt(data.debt)}$('menuDebt').classList.toggle('adjusted',data.debt!==20000)}
 function modal(title,html,buttons=[['OK',()=>closeModal()]]){$('modalTitle').textContent=title;$('modalContent').innerHTML=html;const out=$('modalButtons');out.replaceChildren();for(const [label,cb] of buttons){const b=document.createElement('button');b.className='btn '+(label==='CANCEL'||label==='BACK'?'outline':'gold');b.textContent=label;b.addEventListener('click',cb);out.append(b)}$('modalLayer').classList.add('show')}
 function closeModal(){$('modalLayer').classList.remove('show')}
-function rules(){modal('THE HOUSE RULES',`<p>Six-seat <b>Texas Hold’em</b>. Each player gets two private cards, and five community cards make the best five-card hand. Vinny “The Hammer” is the <b>dealer</b>, not a competing player.</p><p>Everyone starts a run with <b>$1,000 fictional chips</b> and your account starts with <b>$20,000 in fictional debt</b>. Bet, call, check, fold or shove all-in. Pots are split correctly when stacks differ.</p><p>Empty seats are controlled by trash-talking AI. When an AI busts, a replacement buys in with $1,000 next hand. This adds chips to the table over time, so earning more than $20,000 is possible.</p><p>Between hands, you may cash out. <b>Only the amount over $20,000</b> reduces <b>your saved debt</b> on the next run. Anything at or below $20,000 leaves the debt unchanged. Lose every last chip and Vinny personally drags you to his back room.</p><p>Online rooms use a peer-to-peer connection with a free signaling service. Friends need this game open, an internet connection and the room code. The host must stay connected. If a guest leaves, AI takes their seat.</p><p class="muted">Entertainment only. No purchases, payments, gambling deposits or real-money prizes.</p>`)}
+function rules(){modal('THE HOUSE RULES',`<p>Six-seat <b>Texas Hold’em</b>. Each player gets two private cards, and five community cards make the best five-card hand. Vinny “The Hammer” is the <b>dealer</b>, not a competing player.</p><p>Everyone starts a run with <b>$1,000 fictional chips</b> and your account starts with <b>$20,000 in fictional debt</b>. Bet, call, check, fold or shove all-in. Pots are split correctly when stacks differ.</p><p>Empty seats are controlled by trash-talking AI. When an AI busts, a replacement buys in with $1,000 next hand. This adds chips to the table over time, so earning more than $20,000 is possible.</p><p>Between hands, you may cash out. <b>Only the amount over $20,000</b> reduces <b>your saved debt</b> on the next run. Anything at or below $20,000 leaves the debt unchanged. Lose every last chip and Vinny personally drags you to his back room.</p><p>Online rooms use a dedicated WebSocket relay server. Friends need this game open, an internet connection and the room code. The host must stay connected. If a guest leaves, AI takes their seat.</p><p class="muted">Entertainment only. No purchases, payments, gambling deposits or real-money prizes.</p>`)}
 function settings(){modal('SETTINGS',`<p>Sound effects: <b>${data.sound?'ON':'OFF'}</b> · Spoken voice lines: <b>${data.voices?'ON':'OFF'}</b></p><p>Runs played: <b>${data.runs}</b> · Best chip stack: <b>${fmt(data.best)}</b></p><p>Saved debt: <b>${fmt(data.debt)}</b></p><p class="muted">Voices use your browser’s text-to-speech engine. Availability varies by browser and device; tap the screen first to allow audio.</p>`,[['TOGGLE SOUND',()=>{data.sound=!data.sound;persist();settings()}],['TOGGLE VOICES',()=>{data.voices=!data.voices;persist();settings()}],['RESET DEBT',()=>modal('RESET SAVED DEBT?',`<p>Restore the full $20,000 debt and clear your records?</p>`,[['YES, RESET',()=>{data.debt=20000;data.runs=0;data.best=1000;persist();settings()}],['CANCEL',settings]])],['DONE',closeModal]])}
-function credits(){modal('CREDITS',`<p><b>I Lost It All</b> · Version 0.4.0 · Animated cartoon cast, fullscreen, six-seat mob poker.</p><p>Six original cartoon gamblers, Vinny the mob-boss dealer, comic-book cutscenes and browser-generated voices.</p><p class="muted">A free fictional poker game with no real-money betting.</p>`)}
+function credits(){modal('CREDITS',`<p><b>I Lost It All</b> · Version 0.4.3 · Animated cartoon cast, fullscreen, six-seat mob poker.</p><p>Six original cartoon gamblers, Vinny the mob-boss dealer, comic-book cutscenes and browser-generated voices.</p><p class="muted">A free fictional poker game with no real-money betting.</p>`)}
 const deck=()=>{const a=[];for(const suit of SUITS)for(const rank of RANKS)a.push({rank,suit});for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 function value5(cards){const ranks=cards.map(c=>c.rank).sort((a,b)=>b-a);const f={};ranks.forEach(r=>f[r]=(f[r]||0)+1);const groups=Object.entries(f).map(([r,n])=>({r:+r,n})).sort((a,b)=>b.n-a.n||b.r-a.r);const flush=cards.every(c=>c.suit===cards[0].suit);let straight=0;const u=[...new Set(ranks)];if(u.includes(14))u.push(1);for(let k=0;k<=u.length-5;k++)if(u[k]-u[k+4]===4){straight=u[k];break}
 if(flush&&straight)return[8,straight];if(groups[0].n===4)return[7,groups[0].r,groups[1].r];if(groups[0].n===3&&groups[1].n===2)return[6,groups[0].r,groups[1].r];if(flush)return[5,...ranks];if(straight)return[4,straight];if(groups[0].n===3)return[3,groups[0].r,...groups.slice(1).map(g=>g.r).sort((a,b)=>b-a)];if(groups[0].n===2&&groups[1].n===2)return[2,...[groups[0].r,groups[1].r].sort((a,b)=>b-a),groups[2].r];if(groups[0].n===2)return[1,groups[0].r,...groups.slice(1).map(g=>g.r).sort((a,b)=>b-a)];return[0,...ranks]}
@@ -799,20 +799,56 @@ function startHostHeartbeat(){clearInterval(hostPing);hostPing=setInterval(()=>{
 function recoverGuest(reason){if(mode!=='guest'||!room||autoJoinTimer)return;const code=room;if(autoJoinAttempts>=4){connectionIssue(reason+'. Automatic reconnect failed; tap RETRY JOIN.');return}autoJoinAttempts++;setStatus('RECONNECTING '+autoJoinAttempts+'/4');$('waitNote').textContent='Trying to reconnect to your friends…';clearTimeout(autoJoinTimer);autoJoinTimer=setTimeout(()=>{autoJoinTimer=0;joinRoom(code,true)},Math.min(1000*2**autoJoinAttempts,9000))}
 
 const clearJoinTimers=()=>{clearTimeout(joinDeadline);clearInterval(helloRetry);joinDeadline=0;helloRetry=0};
+
+/* v0.4.3: central WebSocket relay. Host remains authoritative for poker gameplay. */
+const SERVER_STORAGE='lita-multiplayer-server';
+function serverEndpoint(){let url='';try{url=localStorage.getItem(SERVER_STORAGE)||''}catch{}return /^wss:\/\/[a-z0-9.-]+(?::\d+)?(?:\/[^?#]*)?$/i.test(url)?url:''}
+class ServerConnection{
+ constructor(peer,remote){this.owner=peer;this.peer=remote;this.open=false;this.events={}}
+ on(name,fn){(this.events[name]??=[]).push(fn);return this}
+ emit(name,value){for(const fn of this.events[name]||[])try{fn(value)}catch(e){console.error(e)}}
+ send(data){if(this.open)this.owner.sendRaw({t:'data',to:this.peer,data})}
+ close(){if(this.open)this.owner.sendRaw({t:'close',to:this.peer});this.closed()}
+ closed(){if(!this.open)return;this.open=false;this.emit('close')}
+}
+class ServerPeer{
+ constructor(id){this.id=id||'guest-'+Array.from(crypto.getRandomValues(new Uint8Array(12)),x=>x.toString(16).padStart(2,'0')).join('');this.events={};this.links=new Map();this.open=false;this.destroyed=false;this.disconnected=false;this.connectSocket()}
+ on(name,fn){(this.events[name]??=[]).push(fn);return this}
+ emit(name,value){for(const fn of this.events[name]||[])try{fn(value)}catch(e){console.error(e)}}
+ sendRaw(msg){if(this.ws?.readyState===WebSocket.OPEN)this.ws.send(JSON.stringify(msg))}
+ connectSocket(){
+  if(this.destroyed)return;
+  const ws=new WebSocket(serverEndpoint());this.ws=ws;
+  ws.onopen=()=>this.sendRaw({t:'register',id:this.id});
+  ws.onmessage=e=>{let m;try{m=JSON.parse(e.data)}catch{return}
+   if(m.t==='registered'){this.open=true;this.disconnected=false;this.emit('open',this.id);return}
+   if(m.t==='error'){this.emit('error',{type:m.type,message:m.message});return}
+   if(m.t==='incoming'){let c=this.links.get(m.peer);if(!c){c=new ServerConnection(this,m.peer);this.links.set(m.peer,c);this.emit('connection',c)}return}
+   if(m.t==='opened'){let c=this.links.get(m.peer);if(!c){c=new ServerConnection(this,m.peer);this.links.set(m.peer,c)}c.open=true;c.emit('open');return}
+   if(m.t==='data'){this.links.get(m.peer)?.emit('data',m.data);return}
+   if(m.t==='closed'){const c=this.links.get(m.peer);if(c){c.closed();this.links.delete(m.peer)}}
+  };
+  ws.onclose=()=>{this.open=false;for(const c of this.links.values())c.closed();this.links.clear();if(!this.destroyed){this.disconnected=true;this.emit('disconnected')}};
+  ws.onerror=()=>{};
+ }
+ connect(id){let c=this.links.get(id);if(!c){c=new ServerConnection(this,id);this.links.set(id,c)}this.sendRaw({t:'connect',to:id});return c}
+ reconnect(){if(this.destroyed||this.ws?.readyState===WebSocket.CONNECTING||this.ws?.readyState===WebSocket.OPEN)return;this.connectSocket()}
+ destroy(){this.destroyed=true;this.open=false;this.ws?.close();for(const c of this.links.values())c.closed();this.links.clear()}
+}
+function showServerSettings(){
+ const current=serverEndpoint();
+ modal('MULTIPLAYER SERVER',`<p>This version uses a dedicated WebSocket server instead of PeerJS. Deploy the included <b>server.js</b> to a Node.js host, then paste its secure WebSocket address.</p><p><input id="serverUrlInput" style="width:100%;padding:12px;background:#18141a;color:#fff;border:1px solid #c69b60;border-radius:8px" placeholder="wss://your-server.onrender.com" value="${current.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"></p><p class="muted">GitHub Pages hosts the game only. A running server is required for online rooms.</p>`,[['SAVE SERVER',()=>{const v=document.getElementById('serverUrlInput').value.trim().replace(/\/$/,'');if(!/^wss:\/\/[a-z0-9.-]+(?::\d+)?(?:\/[^?#]*)?$/i.test(v))return toast('Enter a valid wss:// server URL');localStorage.setItem(SERVER_STORAGE,v);closeModal();toast('Multiplayer server saved. Create a new room.') }],['CANCEL',closeModal]])
+}
+function addServerSettings(){
+ const el=document.createElement('button');el.type='button';el.className='btn outline sm';el.textContent='⚙ MULTIPLAYER SERVER';el.addEventListener('click',showServerSettings);
+ document.querySelector('#lobbyScreen .lobbyHeaderButtons')?.prepend(el);
+ const note=document.getElementById('onlineHelp');if(note)note.textContent='Online rooms use a dedicated WebSocket server. Configure MULTIPLAYER SERVER, then create a room and share the code. The host must stay connected for active poker hands.';
+}
+
 function loadPeerJs(){
- if(window.Peer)return Promise.resolve(window.Peer);
- if(peerLibPromise)return peerLibPromise;
- const urls=['https://cdn.jsdelivr.net/npm/peerjs@1.5.5/dist/peerjs.min.js','https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.5/peerjs.min.js'];
- peerLibPromise=new Promise((resolve,reject)=>{
-  let i=0;
-  const next=()=>{
-   if(i>=urls.length){reject(new Error('The online library could not load. Try Safari or Chrome with internet access.'));return}
-   const el=document.createElement('script');el.src=urls[i++];el.async=true;
-   el.onload=()=>window.Peer?resolve(window.Peer):next();el.onerror=next;
-   document.head.appendChild(el)
-  };next()
- }).catch(e=>{peerLibPromise=null;throw e});
- return peerLibPromise
+ const url=serverEndpoint();
+ if(!url)return Promise.reject(new Error('Set your multiplayer server URL in the lobby first. Deploy server.js, then paste its wss:// address.'));
+ return Promise.resolve(ServerPeer);
 }
 function setStatus(txt){$('roomStatus').textContent=txt}
 function inviteURL(){
@@ -857,6 +893,7 @@ function renderLobby(){if(!G)return;const out=$('lobbyPlayers');out.replaceChild
 function chooseSeat(idx){if(!G||G.phase!=='lobby'||idx===mySeat||G.players[idx].human)return;if(mode==='guest'){if(!hostConnection?.open)return toast('Waiting for the host.');hostConnection.send({type:'choose',seat:idx});return}G.players[mySeat].human=false;G.players[mySeat].peerId=null;humanAt(idx,'host');mySeat=idx;chosen=idx;publish()}
 function startSolo(){stopConnections();mode='solo';G=newLobby();mySeat=chosen;humanAt(mySeat,'host');live=true;showLobby();announce('Vinny deals for a table full of trouble.',-1,'deal');publish()}
 async function createRoom(){
+ if(!serverEndpoint()){showServerSettings();return}
  stopConnections();mode='host';G=newLobby();mySeat=chosen;humanAt(mySeat,'host');room=randomRoom();const session=netSession;
  showLobby();setHostReady(false);setStatus('CONNECTING · NOT READY');$('waitNote').textContent='Opening the online room. Do not share the code until ONLINE appears.';
  try{
@@ -898,6 +935,7 @@ async function createRoom(){
  }catch(e){if(session!==netSession)return;live=false;setHostReady(false);setStatus('ONLINE UNAVAILABLE');$('waitNote').textContent=e.message;connectionProblem(e.message,'host');toast(e.message)}
 }
 async function joinRoom(code,retrying=false){
+ if(!serverEndpoint()){showServerSettings();return}
  code=parseRoomCode(code);if(!code){toast('Enter the 4-character code or a valid invite link.');return}
  const previousAttempts=autoJoinAttempts;if(!retrying)autoJoinAttempts=0;stopConnections();if(retrying)autoJoinAttempts=previousAttempts;clearConnectionProblem();mode='guest';room=code;mySeat=-1;G=null;joinPending=true;const session=netSession;
  ensureCrossPlatformNotice();screen('lobbyScreen');$('lobbyCode').textContent=code;$('lobbyCodeWrap').hidden=false;$('copyCodeBtn').hidden=true;$('inviteLinkBtn').hidden=true;
@@ -919,7 +957,7 @@ async function joinRoom(code,retrying=false){
     const hello=()=>{
      if(session!==netSession||!joinPending||!conn.open){clearInterval(helloRetry);return}
      if(++attempts>20){connectionIssue('Connected to host but did not receive a seat. Ask host to restart the room.');return}
-     try{conn.send({type:'hello',seat:chosen,token:guestIdentity,version:'0.4.0'})}catch{}
+     try{conn.send({type:'hello',seat:chosen,token:guestIdentity,version:'0.4.3'})}catch{}
     };
     hello();helloRetry=setInterval(hello,1000)
    });
@@ -937,10 +975,10 @@ async function joinRoom(code,retrying=false){
   })
  }catch(e){if(session===netSession)recoverGuest(e.message)}
 }
-function handleHostMessage(conn,msg){if(!msg||typeof msg!=='object')return;let seat=G?.players.findIndex(p=>p.peerId===conn.peer&&p.human)??-1;if(msg.type==='hello'){if(seat>=0){conn.send({type:'welcome',seat,room,version:'0.4.0'});publish();return}const token=typeof msg.token==='string'?msg.token.slice(0,128):'';const claim=token&&seatClaims.get(token);if(claim&&G?.players[claim.seat]?.human&&G.players[claim.seat].peerId===claim.peer){const old=connections.get(claim.peer);if(old&&old!==conn)try{old.close()}catch{};G.players[claim.seat].peerId=conn.peer;seatClaims.set(token,{seat:claim.seat,peer:conn.peer});connections.set(conn.peer,conn);conn.send({type:'welcome',seat:claim.seat,room,version:'0.4.0',reconnected:true});publish();return}if(!G||G.phase!=='lobby'){conn.send({type:'rejected',reason:'The match is already running.'});return}let want=Number.isInteger(msg.seat)?msg.seat:-1;if(want<0||want>=6||G.players[want].human)want=G.players.findIndex(p=>!p.human);if(want<0){conn.send({type:'rejected',reason:'All six seats are full.'});return}humanAt(want,conn.peer);connections.set(conn.peer,conn);if(token)seatClaims.set(token,{seat:want,peer:conn.peer});conn.send({type:'welcome',seat:want,room,version:'0.4.0'});announce(CHAR[want].name+' joined the table!',-1,'deal');publish();return}
+function handleHostMessage(conn,msg){if(!msg||typeof msg!=='object')return;let seat=G?.players.findIndex(p=>p.peerId===conn.peer&&p.human)??-1;if(msg.type==='hello'){if(seat>=0){conn.send({type:'welcome',seat,room,version:'0.4.3'});publish();return}const token=typeof msg.token==='string'?msg.token.slice(0,128):'';const claim=token&&seatClaims.get(token);if(claim&&G?.players[claim.seat]?.human&&G.players[claim.seat].peerId===claim.peer){const old=connections.get(claim.peer);if(old&&old!==conn)try{old.close()}catch{};G.players[claim.seat].peerId=conn.peer;seatClaims.set(token,{seat:claim.seat,peer:conn.peer});connections.set(conn.peer,conn);conn.send({type:'welcome',seat:claim.seat,room,version:'0.4.3',reconnected:true});publish();return}if(!G||G.phase!=='lobby'){conn.send({type:'rejected',reason:'The match is already running.'});return}let want=Number.isInteger(msg.seat)?msg.seat:-1;if(want<0||want>=6||G.players[want].human)want=G.players.findIndex(p=>!p.human);if(want<0){conn.send({type:'rejected',reason:'All six seats are full.'});return}humanAt(want,conn.peer);connections.set(conn.peer,conn);if(token)seatClaims.set(token,{seat:want,peer:conn.peer});conn.send({type:'welcome',seat:want,room,version:'0.4.3'});announce(CHAR[want].name+' joined the table!',-1,'deal');publish();return}
 if(seat<0||seat>=6)return;
 if(msg.type==='ping'){try{conn.send({type:'pong'})}catch{};return}
-if(msg.type==='choose'&&G.phase==='lobby'){let target=msg.seat;if(!Number.isInteger(target)||target<0||target>=6||G.players[target].human)return;G.players[seat].human=false;G.players[seat].peerId=null;humanAt(target,conn.peer);for(const [token,claim] of seatClaims)if(claim.peer===conn.peer)seatClaims.set(token,{seat:target,peer:conn.peer});conn.send({type:'welcome',seat:target,room,version:'0.4.0'});publish()}
+if(msg.type==='choose'&&G.phase==='lobby'){let target=msg.seat;if(!Number.isInteger(target)||target<0||target>=6||G.players[target].human)return;G.players[seat].human=false;G.players[seat].peerId=null;humanAt(target,conn.peer);for(const [token,claim] of seatClaims)if(claim.peer===conn.peer)seatClaims.set(token,{seat:target,peer:conn.peer});conn.send({type:'welcome',seat:target,room,version:'0.4.3'});publish()}
 else if(msg.type==='action'&&G.phase==='betting')move(seat,msg.action);
 else if(msg.type==='leave'){for(const [token,c] of seatClaims)if(c.peer===conn.peer)seatClaims.delete(token);guestGone(conn.peer);try{conn.close()}catch{}}
 }
@@ -1168,7 +1206,7 @@ function animateCharacterAction(v){
 const renderViewBeforeDealerEffects=renderView;
 renderView=function(v){renderViewBeforeDealerEffects(v);dealerAnimateView(v)};
 
-mountCartoons();syncFullscreen();updateDebt();
+addServerSettings();mountCartoons();syncFullscreen();updateDebt();
 const inviteCode=new URLSearchParams(location.search).get('room');if(inviteCode&&/^[a-z0-9]{4}$/i.test(inviteCode))joinRoom(inviteCode);
 if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5,compare,handValue,deck,judge:handValue,getState:()=>G,beginRun,startHand,move,createSolo:startSolo,publicState,renderView,showdown,foldWin,performCashout,death,quitTable,botDecision,animateTableEvent,chooseSeat,createRoom,joinRoom,inviteURL,stopConnections,parseRoomCode};
 })();

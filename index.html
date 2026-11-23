@@ -1561,8 +1561,8 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
   const token=Symbol();el._armGesture=token;
   setTimeout(()=>{if(el._armGesture===token)el.classList.remove(name)},duration);
  }
- const original=renderView;
- renderView=function(v){original(v);animate(v)};
+ // Game state is private to the main game module. Keep animation observer local.
+ // The seat DOM observer above updates character gestures without referencing a private symbol.
 })();
 </script>
 
@@ -1696,12 +1696,8 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
  let revealed=true;
  function setReveal(v){revealed=v;hud.classList.toggle('revealed',v);btn.textContent=v?'🂠 HIDE MY CARDS':'🃏 VIEW MY CARDS';btn.setAttribute('aria-pressed',String(v));}
  btn.addEventListener('click',()=>setReveal(!revealed));
- const prior=renderView;
- renderView=function(v){prior(v);const me=v?.players?.find(p=>p.seat===mySeat);const target=hud.querySelector('.myHoleCards');target.replaceChildren();
-  if(me?.hole?.length){target.append(cardsHtml(me.hole));hud.style.display='flex';btn.disabled=false;}
-  else {hud.style.display='none';btn.disabled=true;}
- };
- if(typeof view!=='undefined'&&view)renderView(view);
+ // Private cards are mirrored from the local player's own seat DOM by the reliability observer below.
+ // Never attempt to access another player's hidden game state.
 })();
 </script>
 
@@ -1726,21 +1722,26 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
 (function(){
  const host=document.getElementById('tableScene');if(!host)return;
  const status=document.createElement('div');status.id='poker3dStatus';status.textContent='LOADING 3D POKER ROOM';host.append(status);
+ let recovered=false,booted=false;
+ const watchdog=setTimeout(()=>{if(!booted)recover('3D engine timed out after 6 seconds');},6000);
  const canvas=document.createElement('canvas');canvas.id='poker3dCanvas';host.prepend(canvas);
  function recover(reason){
+  if(recovered)return;recovered=true;clearTimeout(watchdog);
   console.error('[Poker 3D] Starting classic table fallback:',reason);
   canvas.style.display='none';
   host.querySelector('.tableWrap')?.style.setProperty('visibility','visible','important');
   host.querySelector('.dealerStrip')?.style.setProperty('visibility','visible','important');
   const monitor=host.querySelector('#dealerMonitor3d');if(monitor)monitor.style.display='none';
   host.classList.add('poker3d-fallback');
-  status.textContent='TABLE VIEW · 3D UNAVAILABLE';
+  status.textContent='TABLE VIEW · 3D UNAVAILABLE';setTimeout(()=>{if(recovered)status.style.display='none';},2400);
   status.title=String(reason||'');
  }
  function boot(){
+  if(recovered||booted)return;
   try{
   if(!window.THREE){recover('3D engine missing');return;}
   const T=THREE,mobile=window.innerWidth<700,renderer=new T.WebGLRenderer({canvas,antialias:!mobile,alpha:false,powerPreference:'default'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,mobile?1.35:1.8));renderer.shadowMap.enabled=!mobile;renderer.shadowMap.type=T.PCFSoftShadowMap;
+  booted=true;clearTimeout(watchdog);
   const world=new T.Scene();world.background=new T.Color('#171016');world.fog=new T.Fog('#171016',12,26);
   const camera=new T.PerspectiveCamera(65,1,.08,70);camera.position.set(0,1.95,2.65);
   world.add(new T.HemisphereLight(0xffd5a2,0x252335,1.4));const lamp=new T.PointLight(0xffd49b,95,13);lamp.position.set(0,4.5,0);lamp.castShadow=true;world.add(lamp);
@@ -2235,21 +2236,22 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
    syncBoardFaces();syncChipStacks();updateChipTransfers();
    board.forEach((b,i)=>{b.visible=i<shown.length&&!dealing.some(d=>d.boardIndex===i);});
   }
-  let frames=0,lastFrame=0;function animate(t){if(host.classList.contains('poker3d-fallback'))return;try{const dt=Math.min(.05,(t-lastFrame)/1000||0);lastFrame=t;if(!document.getElementById('tableScreen').classList.contains('active'))return;update();bodies.forEach((b,i)=>{b.g.position.y=Math.sin(t*.0016+i)*.018;});animatePlayers(t);animateShuffle(t);animateDeals(dt,t);animateFlyingChips(dt);updateDealerCards();renderer.render(world,camera);if(dealerRenderer){sizeDealer();dealerRenderer.render(world,dealerCamera);}if(frames++===2)status.textContent='3D POKER ROOM · READY';requestAnimationFrame(animate);}catch(err){recover(err?.stack||err?.message||String(err));}}requestAnimationFrame(animate);
+  let frames=0,lastFrame=0;function animate(t){if(host.classList.contains('poker3d-fallback'))return;try{const dt=Math.min(.05,(t-lastFrame)/1000||0);lastFrame=t;if(!document.getElementById('tableScreen').classList.contains('active')){requestAnimationFrame(animate);return;}update();bodies.forEach((b,i)=>{b.g.position.y=Math.sin(t*.0016+i)*.018;});animatePlayers(t);animateShuffle(t);animateDeals(dt,t);animateFlyingChips(dt);updateDealerCards();renderer.render(world,camera);if(dealerRenderer){sizeDealer();dealerRenderer.render(world,dealerCamera);}if(frames++===2)status.textContent='3D POKER ROOM · READY';requestAnimationFrame(animate);}catch(err){recover(err?.stack||err?.message||String(err));}}requestAnimationFrame(animate);
   let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});canvas.addEventListener('pointerup',e=>{if(!down)return;const dx=e.clientX-down.x;down=null;if(Math.abs(dx)<12)return;const current=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;table.style.setProperty('--cameraYaw',Math.max(-70,Math.min(70,current+dx*.14))+'deg');});
   }catch(err){recover(err?.stack||err?.message||String(err));}
  }
  // Load a pinned, legacy-compatible THREE build from either CDN.
  // Never leave the poker table hidden if both hosts fail.
  const engines=[
-  'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js',
-  'https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js',
-  'https://unpkg.com/three@0.159.0/build/three.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/r149/three.min.js',
+  'https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js',
+  'https://unpkg.com/three@0.149.0/build/three.min.js'
  ];
  function loadEngine(i=0){
+  if(recovered||booted)return;
   if(window.THREE){boot();return;}
   if(i>=engines.length){recover('3D library could not be downloaded');return;}
-  const script=document.createElement('script');script.src=engines[i];script.async=true;
+  const script=document.createElement('script');script.src=engines[i];script.async=true;script.referrerPolicy='no-referrer';
   script.onload=()=>window.THREE?boot():loadEngine(i+1);
   script.onerror=()=>loadEngine(i+1);
   document.head.append(script);

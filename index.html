@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.46 3D Poker Room</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.47 3D Poker Room</title>
 <style>:root{--red:#b82626;--wine:#4b111a;--gold:#efb25a;--cream:#ffe6bc;--ink:#100b0e;--felt:#125940;--mint:#80e6a2;--gray:#b7afa8}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;}body{background:radial-gradient(at 40% -25%,#654035 0%,#1c1015 45%,#09080b 100%);color:var(--cream);font:600 16px/1.35 system-ui,Arial,sans-serif;overflow-x:hidden}button,input{font:inherit}button{touch-action:manipulation;cursor:pointer}button:disabled{opacity:.39;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid #ffdf91;outline-offset:2px}[hidden]{display:none!important}.screen{display:none;min-height:100vh;min-height:100dvh}.screen.active{display:block}h1,h2,h3,p{margin-top:0}.display{font-family:Impact,'Arial Black',system-ui,sans-serif;letter-spacing:.045em;line-height:1;transform:skew(-3deg)}.goldText{color:var(--gold)}.redText{color:#ed3d34}.muted{color:#bcada5;font-size:13px}.btn{border:2px solid #090709;border-bottom-width:5px;border-radius:5px;background:#ad2825;color:#fff2dc;text-shadow:1px 2px #42101d;box-shadow:0 5px 0 #10080a;font-family:Impact,'Arial Black',sans-serif;font-size:clamp(15px,2.5vw,20px);padding:12px 16px;letter-spacing:.055em;min-height:49px;transition:filter .13s,transform .13s}.btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 2px 0 #10080a}.btn:hover:not(:disabled){filter:brightness(1.2)}.btn.gold{background:#cb8839;color:#190d0c;text-shadow:none}.btn.green{background:#258266}.btn.outline{background:#251b20;border-color:#78543f}.btn.sm{font-size:13px;padding:8px 11px;min-height:38px}.panel{background:linear-gradient(155deg,#25161b,#130e12);border:3px solid #070707;outline:1px solid #865037;box-shadow:0 13px 40px #0009}
 #menuScreen{display:none;place-items:center;padding:clamp(9px,3vw,30px)}#menuScreen.active{display:grid}.menuShell{width:min(1150px,100%);min-height:min(86vh,780px);display:grid;grid-template-columns:1.1fr .9fr;overflow:hidden}.menuArt{position:relative;background:linear-gradient(0deg,#160a10b8 0%,transparent 40%),linear-gradient(90deg,transparent 75%,#1a0e16 100%),var(--cover) 50% 50%/cover;min-height:560px}.menuArt:after{content:'';position:absolute;inset:auto 0 0;height:43px;background:repeating-linear-gradient(110deg,transparent 0 32px,#d926253a 32px 44px)}.menuRight{display:flex;flex-direction:column;gap:15px;justify-content:center;padding:clamp(16px,4.5vw,62px);background:radial-gradient(at 0% 45%,#6d2225 0%,#251216 56%,#100c10 100%);text-align:center}.menuTitle{font-size:clamp(44px,6vw,84px);color:#ffe2aa;text-shadow:4px 6px 0 #180a10,7px 9px 0 #a21722;margin:0;line-height:.95}.menuTitle em{color:#d92b29;font-style:normal}.eyebrow{color:var(--gold);letter-spacing:.28em;font-size:12px;font-weight:900}.menuHint{font-size:13px;color:#c0a49b;margin:-2px 0}.menuActions{display:grid;gap:9px;margin-top:10px}.menuActions .btn{font-size:21px;min-height:52px}.debtPlate{background:#09090d;border:3px solid #9a2524;box-shadow:0 3px 0 #000;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:13px}.debtPlate b{font-family:Impact,'Arial Black',sans-serif;color:#ee372d;font-size:30px}.version{font-size:11px;color:#ad9b91}
@@ -1169,11 +1169,28 @@ function scheduleAI(){clearTimeout(aiTimer);if(!G||G.phase!=='betting'||mode==='
 function clientAct(action){if(mode==='guest'){if(!hostConnection?.open)return toast('Connection lost.');hostConnection.send({type:'action',action});return}move(mySeat,action)}
 function cardNode(card,back=false){const c=document.createElement('span');c.className='pcard'+(back?' back':'')+(card&&['♥','♦'].includes(card.suit)?' red':'');if(!card&&!back){c.classList.add('blank');c.textContent='◆'}else if(back){c.textContent='♠'}else{c.innerHTML=`<span>${RN[card.rank]||card.rank}</span><b>${card.suit}</b>`}return c}
 function cardsHtml(cards,back=false){let w=document.createDocumentFragment();for(let j=0;j<2;j++)w.append(cardNode(cards?.[j]||null,back||!cards));return w}
-function renderView(v){if(!v)return;const me=v.players.find(p=>p.seat===mySeat);$("hudChips").textContent=fmt(me?.stack||0);$("hudDebt").textContent=fmt(data.debt);$("roundInfo").textContent=`HAND ${v.handNo} · ${v.street.toUpperCase()} · ANTE ${fmt(v.ante)}`;$("potValue").textContent=fmt(v.pot);$("tableMessage").textContent=v.log||"";$("modeLabel").textContent=mode==='solo'?'SOLO · 5 AI':mode==='host'?'HOST · '+room:'ROOM · '+room;
+function sync3DPokerState(v){
+ // Local rendering only: no network messages, no opponent's hidden cards.
+ const own=Number(mySeat);
+ const safeCard=c=>c&&typeof c==='object'?{rank:({11:'J',12:'Q',13:'K',14:'A'}[c.rank]||String(c.rank)),suit:String(c.suit||'')}:null;
+ window.__litaPokerVisualState={
+  handNo:Number(v.handNo)||0,phase:String(v.phase||''),street:String(v.street||''),
+  eventId:Number(v.eventId)||0,board:Array.isArray(v.board)?v.board.slice(0,5).map(safeCard).filter(Boolean):[],
+  players:Array.isArray(v.players)?v.players.map(player=>({
+   relativeSeat:((Number(player.seat)-own+6)%6),seat:Number(player.seat),
+   name:String(player.character||''),active:player.stack>0||player.contrib>0,
+   folded:!!player.folded,stack:Math.max(0,Number(player.stack)||0),
+   // Only the viewing player's two private cards are ever included.
+   hole:Number(player.seat)===own&&Array.isArray(player.hole)?player.hole.slice(0,2).map(safeCard).filter(Boolean):null
+  })):[]
+ };
+}
+
+function renderView(v){if(!v)return;sync3DPokerState(v);const me=v.players.find(p=>p.seat===mySeat);$("hudChips").textContent=fmt(me?.stack||0);$("hudDebt").textContent=fmt(data.debt);$("roundInfo").textContent=`HAND ${v.handNo} · ${v.street.toUpperCase()} · ANTE ${fmt(v.ante)}`;$("potValue").textContent=fmt(v.pot);$("tableMessage").textContent=v.log||"";$("modeLabel").textContent=mode==='solo'?'SOLO · 5 AI':mode==='host'?'HOST · '+room:'ROOM · '+room;
 const seats=$("seats");seats.replaceChildren();v.players.forEach(p=>{const el=document.createElement("div");el.className=`seat seat${p.seat} pov${(p.seat-mySeat+6)%6}`+(p.seat===mySeat?' you':'')+(v.turn===p.seat?' acting':'')+(p.folded&&v.phase==='betting'?' folded':'')+(v.winners.includes(p.seat)&&v.phase==='handEnd'?' winner':'');el.dataset.seat=String(p.seat);const body=document.createElement("div");body.className='seatBody';body.innerHTML=`<div class="seatBadge">${p.seat===mySeat?'★ YOU':p.human?'● FRIEND':'◆ AI'}</div>${toonMarkup(p.seat)}`;const cards=document.createElement("div");cards.className='seatCards';if(v.phase!=='lobby'&&p.hole){if(p.hole.length)cards.append(cardsHtml(p.hole));else if(v.phase==='betting')cards.append(cardsHtml(null,true))}else if(v.phase==='betting')cards.append(cardsHtml(null,true));body.append(cards);el.append(body);const info=document.createElement("div");info.className='seatInfo';info.innerHTML=`<div class="seatTop">${p.seat===mySeat?'YOUR CHAIR':p.human?'FRIEND':'AI GAMBLER'}</div><b class="seatName">${CHAR[p.seat].short}</b><strong class="seatStack">${fmt(p.stack)}</strong><small class="lastMove">${p.last||'READY'}</small>`;el.append(info);if(v.phase==='handEnd'&&v.winners.includes(p.seat))el.classList.add('doing-win');seats.append(el)});
 const board=$("boardCards");board.replaceChildren();for(let i=0;i<5;i++)board.append(cardNode(v.board[i]||null));const yourTurn=v.phase==='betting'&&v.turn===mySeat&&!!me&&me.stack>0;$("actionPanel").hidden=v.phase!=='betting';$("endPanel").hidden=v.phase!=='handEnd';$("waitingText").textContent=v.phase==='betting'&&!yourTurn?`Waiting for ${v.players[v.turn]?.character||'showdown'}…`:yourTurn?'YOUR MOVE — THE BOSS IS WATCHING':'';const owed=Math.max(0,v.currentBet-(me?.streetBet||0));$("callBtn").textContent=owed?'CALL '+fmt(Math.min(owed,me?.stack||0)):'CHECK';$("raiseBtn").textContent=(owed?'RAISE ':'BET ')+fmt(Math.min(me?.stack||0,owed+Math.max(v.ante*2,v.street==='preflop'?40:v.street==='flop'?60:v.street==='turn'?100:140)));for(const id of ['foldBtn','callBtn','raiseBtn','allinBtn'])$(id).disabled=!yourTurn;$("raiseBtn").disabled=!yourTurn||(me?.stack||0)<=owed;$("resultText").textContent=v.result||'Hand complete.';$("nextHandBtn").hidden=mode==='guest';$("nextHandBtn").disabled=mode==='guest'||(me?.stack||0)===0;$("cashBtn").disabled=(me?.stack||0)<=0;$("cashBtn").textContent=(me?.stack||0)>20000?'CASH OUT · PAY '+fmt(Math.min(data.debt,(me?.stack||0)-20000)):'CASH OUT / LEAVE';if(v.voice&&v.voice.id!==voiced){voiced=v.voice.id;speak(v.voice.line,v.voice.seat);$("tauntText").textContent=`${v.voice.seat<0?'VINNY':CHAR[v.voice.seat].name}: “${v.voice.line}”`}if(v.phase==='handEnd'&&(me?.stack||0)===0&&!deathShown){deathShown=true;setTimeout(()=>{if(view?.phase==='handEnd')death()},1250)}else if(v.phase==='betting'){deathShown=false}animateTableEvent(v);animateCharacterAction(v);if(talkingSeat!==null)markSpeaking(talkingSeat,true)}
 function performCashout(){const me=view?.players.find(p=>p.seat===mySeat);if(!view||view.phase!=='handEnd'||!me||me.stack<=0)return;const old=data.debt,pay=Math.min(old,Math.max(0,me.stack-20000));data.debt=Math.max(0,old-pay);persist();const amount=me.stack;const result=pay>0?`You paid ${fmt(pay)} off your debt.`:'Your debt stays unchanged.';leaveCurrent();screen('menuScreen');modal(pay>0?'THE DEBT SHRINKS':'YOU WALKED AWAY',`<p>Cash-out: <b>${fmt(amount)}</b> · Debt before: <b>${fmt(old)}</b> · Debt next run: <b>${fmt(data.debt)}</b>.</p><p>${result}</p><p class="muted">Only chips over $20,000 reduce your debt.</p>`,[['PLAY AGAIN',()=>{closeModal();startSolo()}],['DONE',closeModal]])}
-function leaveCurrent(){visualEventId=-1;clearTimeout(aiTimer);handKey++;if(mode==='guest'&&hostConnection?.open)try{hostConnection.send({type:'leave'})}catch{}if(mode==='host')for(const conn of connections.values())try{conn.send({type:'closed'})}catch{}stopConnections();G=null;view=null;mode='solo';deathShown=false;voiced=0}
+function leaveCurrent(){window.__litaPokerVisualState=null;visualEventId=-1;clearTimeout(aiTimer);handKey++;if(mode==='guest'&&hostConnection?.open)try{hostConnection.send({type:'leave'})}catch{}if(mode==='host')for(const conn of connections.values())try{conn.send({type:'closed'})}catch{}stopConnections();G=null;view=null;mode='solo';deathShown=false;voiced=0}
 function quitTable(){modal('LEAVE THE TABLE?',`<p>Leaving this run forfeits your chips. Your <b>saved debt stays ${fmt(data.debt)}</b> unless you cash out between hands with over $20,000.</p><p>${mode==='host'?'Leaving closes your online room for everyone.':'Any vacant online seat becomes an AI opponent.'}</p>`,[['LEAVE',()=>{closeModal();leaveCurrent();screen('menuScreen')}],['CANCEL',closeModal]])}
 function death(){if(!deathShown)return;$('deathHero').innerHTML=toonMarkup(Math.max(0,mySeat));screen('deathScreen');const wrap=$('deathStage');wrap.className='deathStage phase1';$('deathHeadline').textContent='VINNY GETS UP';$('deathCaption').textContent='You are out of chips. Vinny pushes his chair back.';$('deathButtons').hidden=true;speak(say(-1,'death'),-1);tick('chip');const token=++handKey;deathTimers.forEach(clearTimeout);deathTimers=[];function step(ms,cb){deathTimers.push(setTimeout(()=>{if(token!==handKey)return;cb()},ms))}
 step(1300,()=>{wrap.className='deathStage phase2';$('deathHeadline').textContent='COME WITH ME';$('deathCaption').textContent='The mob boss grabs your collar and drags you away from the table.';speak(say(-1,'drag'),-1)});
@@ -1850,10 +1867,12 @@ function characterReaction(seat,t,dealer=false){
  return {type,power,elapsed};
 }
 
-function seats(){const arr=[];for(let i=0;i<6;i++){const el=host.querySelector('.seat.pov'+i);const name=el?.querySelector('.seatName')?.textContent?.trim()||'';const val=el?.querySelector('.seatStack')?.textContent||'';let stack=Number(val.replace(/[^0-9.]/g,''))||0;arr.push({active:!!el&&!/empty/i.test(name),name,stack,el});}return arr;}
-function cardsFrom(root){return Array.from(root.querySelectorAll('.pcard:not(.blank)')).map(el=>({rank:el.querySelector('span')?.textContent?.trim()||'',suit:el.querySelector('b')?.textContent?.trim()||''})).filter(c=>c.rank&&c.suit);}
-function board(){const el=host.querySelector('#boardCards');return el?cardsFrom(el).slice(0,5):[];}
-function hole(){const el=host.querySelector('.seat.you .seatCards');return el?cardsFrom(el).slice(0,2):[];}
+// Read the same privacy-filtered state that drives the main game UI.
+// Never reconstruct ranks or balances from hidden HTML markup.
+function visualState(){return window.__litaPokerVisualState||null;}
+function seats(){const arr=Array.from({length:6},()=>({active:false,name:'',stack:0,folded:true,hole:null}));for(const player of visualState()?.players||[]){const i=player.relativeSeat;if(Number.isInteger(i)&&i>=0&&i<6)arr[i]={...player};}return arr;}
+function board(){return visualState()?.board||[];}
+function hole(){return seats()[0]?.hole||[];}
 function chips(x,z,amount){
  if(!amount)return;
  const palette=['#e3decf','#b72b3d','#2f6395','#2a805f','#222735','#c49a44'];
@@ -2027,43 +2046,35 @@ function table(){
 }
 function card(x,z,c,face=true,rotation=0,scaleFactor=1){obj('plane',x,1.117,z,.39*scaleFactor,1,.56*scaleFactor,'#ffffff',rotation,cardTexture(c?.rank,c?.suit,!face));}
 function drawCards(seatData,shown,t){
- // The status banner is outside the table scene. Use it as a single reliable
- // hand identity so the two rounds of dealing replay for EVERY new hand.
- const banner=document.getElementById('roundInfo')?.textContent||'';
- const handMatch=banner.match(/HAND\s+(\d+)/i);
- const currentHand=handMatch?handMatch[1]:banner.split('·')[0].trim();
+ const state=visualState();if(!state||state.phase==='lobby')return;
+ const currentHand=state.handNo;
  if(currentHand!==handPrev){handPrev=currentHand;dealStart=t;}
  const elapsed=t-dealStart;
  const start=[0,-1.75];
- // Always render two private cards for each occupied opponent. Their faces
- // never become public, including in online play and at showdown.
+ // Cards remain face-down for every other seat, including online and showdown.
  for(let i=1;i<=5;i++){
-  if(!seatData[i].active)continue;
+  if(!seatData[i].active||seatData[i].folded)continue;
   const [x,z]=cardPositions[i];
   for(let j=0;j<2;j++){
-   const delay=300+i*145+j*950;
-   const progress=Math.max(0,Math.min(1,(elapsed-delay)/390));
+   const delay=240+i*125+j*760;
+   const progress=Math.max(0,Math.min(1,(elapsed-delay)/380));
    if(progress<=0)continue;
-   const eased=1-Math.pow(1-progress,3);
-   const spread=i===3?.54:.51;
+   const eased=1-Math.pow(1-progress,3),spread=i===3?.54:.51;
    const toX=x+(j-.5)*spread,toZ=z+(j===0?-.06:.06);
-   const px=start[0]+(toX-start[0])*eased;
-   const pz=start[1]+(toZ-start[1])*eased;
-   card(px,pz,null,false,0,.94);
+   card(start[0]+(toX-start[0])*eased,start[1]+(toZ-start[1])*eased,null,false,0,.94);
   }
  }
  const peek=host.querySelector('.myHoleHUD')?.classList.contains('revealed');
- const own=hole();
- for(let i=0;i<2;i++){
-  const progress=Math.max(0,Math.min(1,(elapsed-250-i*950)/390));
+ const own=seatData[0]?.hole||[];
+ for(let i=0;i<Math.min(2,own.length);i++){
+  const progress=Math.max(0,Math.min(1,(elapsed-220-i*760)/380));
   if(progress<=0)continue;
-  const eased=1-Math.pow(1-progress,3);
-  const destX=(i-.5)*.52,destZ=1.53;
-  card(destX*eased, -1.75+(destZ+1.75)*eased,own[i],!!(peek&&own[i]),0,1.06);
+  const eased=1-Math.pow(1-progress,3),destX=(i-.5)*.52,destZ=1.53;
+  card(destX*eased,start[1]+(destZ-start[1])*eased,own[i],!!peek,0,1.06);
  }
- // Flop / turn / river always sit above the felt. Shadow decal is lower
- // than the face, avoiding z-fighting with the table on iPhone GPUs.
- for(let i=0;i<shown.length;i++){
+ // Community cards are authoritative: a stale DOM/UI frame cannot leak an
+ // upcoming street or leave previous-hand cards behind.
+ for(let i=0;i<Math.min(5,shown.length);i++){
   const cx=(i-2)*.57;
   obj('plane',cx,1.095,-.18,.49,1,.70,'#172b20');
   card(cx,-.18,shown[i],true,0,1.20);
@@ -2277,4 +2288,4 @@ window.addEventListener('resize',size,{passive:true});gl.enableVertexAttribArray
 @media(max-width:600px){#tableScreen .tableScene{min-height:510px!important}}
 </style>
 
-<!-- Stability and visuals patch: v0.4.46 — hand deal synchronization, card depth, camera easing, chip lanes, joined limbs. -->
+<!-- Stability and visuals patch: v0.4.47 — hand deal synchronization, card depth, camera easing, chip lanes, joined limbs. -->

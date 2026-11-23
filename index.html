@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.6 Friends Edition Multiplayer</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.7 Friends Edition Multiplayer</title>
 <style>:root{--red:#b82626;--wine:#4b111a;--gold:#efb25a;--cream:#ffe6bc;--ink:#100b0e;--felt:#125940;--mint:#80e6a2;--gray:#b7afa8}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;}body{background:radial-gradient(at 40% -25%,#654035 0%,#1c1015 45%,#09080b 100%);color:var(--cream);font:600 16px/1.35 system-ui,Arial,sans-serif;overflow-x:hidden}button,input{font:inherit}button{touch-action:manipulation;cursor:pointer}button:disabled{opacity:.39;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid #ffdf91;outline-offset:2px}[hidden]{display:none!important}.screen{display:none;min-height:100vh;min-height:100dvh}.screen.active{display:block}h1,h2,h3,p{margin-top:0}.display{font-family:Impact,'Arial Black',system-ui,sans-serif;letter-spacing:.045em;line-height:1;transform:skew(-3deg)}.goldText{color:var(--gold)}.redText{color:#ed3d34}.muted{color:#bcada5;font-size:13px}.btn{border:2px solid #090709;border-bottom-width:5px;border-radius:5px;background:#ad2825;color:#fff2dc;text-shadow:1px 2px #42101d;box-shadow:0 5px 0 #10080a;font-family:Impact,'Arial Black',sans-serif;font-size:clamp(15px,2.5vw,20px);padding:12px 16px;letter-spacing:.055em;min-height:49px;transition:filter .13s,transform .13s}.btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 2px 0 #10080a}.btn:hover:not(:disabled){filter:brightness(1.2)}.btn.gold{background:#cb8839;color:#190d0c;text-shadow:none}.btn.green{background:#258266}.btn.outline{background:#251b20;border-color:#78543f}.btn.sm{font-size:13px;padding:8px 11px;min-height:38px}.panel{background:linear-gradient(155deg,#25161b,#130e12);border:3px solid #070707;outline:1px solid #865037;box-shadow:0 13px 40px #0009}
 #menuScreen{display:none;place-items:center;padding:clamp(9px,3vw,30px)}#menuScreen.active{display:grid}.menuShell{width:min(1150px,100%);min-height:min(86vh,780px);display:grid;grid-template-columns:1.1fr .9fr;overflow:hidden}.menuArt{position:relative;background:linear-gradient(0deg,#160a10b8 0%,transparent 40%),linear-gradient(90deg,transparent 75%,#1a0e16 100%),var(--cover) 50% 50%/cover;min-height:560px}.menuArt:after{content:'';position:absolute;inset:auto 0 0;height:43px;background:repeating-linear-gradient(110deg,transparent 0 32px,#d926253a 32px 44px)}.menuRight{display:flex;flex-direction:column;gap:15px;justify-content:center;padding:clamp(16px,4.5vw,62px);background:radial-gradient(at 0% 45%,#6d2225 0%,#251216 56%,#100c10 100%);text-align:center}.menuTitle{font-size:clamp(44px,6vw,84px);color:#ffe2aa;text-shadow:4px 6px 0 #180a10,7px 9px 0 #a21722;margin:0;line-height:.95}.menuTitle em{color:#d92b29;font-style:normal}.eyebrow{color:var(--gold);letter-spacing:.28em;font-size:12px;font-weight:900}.menuHint{font-size:13px;color:#c0a49b;margin:-2px 0}.menuActions{display:grid;gap:9px;margin-top:10px}.menuActions .btn{font-size:21px;min-height:52px}.debtPlate{background:#09090d;border:3px solid #9a2524;box-shadow:0 3px 0 #000;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:13px}.debtPlate b{font-family:Impact,'Arial Black',sans-serif;color:#ee372d;font-size:30px}.version{font-size:11px;color:#ad9b91}
@@ -830,7 +830,7 @@ function setStatus(txt){$('roomStatus').textContent=txt}
 function inviteURL(){
  // An invite must never point to a file:// preview or a temporary sandbox.
  const isPublished=location.hostname==='pz7sby6vmy-jpg.github.io'&&location.pathname.toLowerCase().startsWith('/i-lost-it-all-');
- const url=new URL(isPublished?location.href:PUBLISHED_SITE);url.searchParams.delete('test');url.searchParams.set('room',room);url.searchParams.set('v','046');url.hash='';return url.href
+ const url=new URL(isPublished?location.href:PUBLISHED_SITE);url.searchParams.delete('test');url.searchParams.set('room',room);url.searchParams.set('v','047');url.hash='';return url.href
 }
 function setHostReady(ready){$('startRoomBtn').disabled=mode==='host'&&!ready;$('copyCodeBtn').disabled=mode==='host'&&!ready;$('inviteLinkBtn').disabled=mode==='host'&&!ready}
 function connectionIssue(reason){
@@ -849,6 +849,7 @@ function stopConnections(){
  for(const c of connections.values())try{c.close()}catch{}connections.clear();
  if(hostConnection){try{hostConnection.close()}catch{}hostConnection=null}
  if(peer){try{peer.destroy()}catch{}peer=null}
+ closeRelays();
  room='';live=false;seatClaims.clear();
 }
 function ensureCrossPlatformNotice(){
@@ -859,7 +860,7 @@ function ensureCrossPlatformNotice(){
 }
 function showLobby(){
  ensureCrossPlatformNotice();
- const help=document.getElementById('onlineHelp');if(help)help.textContent='NO SERVER SETUP · Share your four-character room code or invite link. The host must keep the tab open. Direct connections can fail on restricted Wi-Fi; try mobile data if joining fails.';
+ const help=document.getElementById('onlineHelp');if(help)help.textContent='NO SERVER SETUP · Share your four-character room code or invite link. Works on Wi-Fi or mobile data — if a direct link is blocked the game switches to a relay automatically. The host must keep the tab open.';
  clearConnectionProblem();screen('lobbyScreen');$('lobbyCode').textContent='SOLO';
  $('lobbyCodeWrap').hidden=(mode==='solo');$('copyCodeBtn').hidden=(mode==='solo');$('inviteLinkBtn').hidden=(mode!=='host');
  $('startRoomBtn').hidden=(mode==='guest');setHostReady(mode!=='host'||live);
@@ -869,90 +870,209 @@ function showLobby(){
 function renderLobby(){if(!G)return;const out=$('lobbyPlayers');out.replaceChildren();for(const p of G.players){const el=document.createElement('button');el.className='avatarChoice '+(p.seat===mySeat?'mine ':'')+(p.human?'taken':'');el.disabled=mode==='guest'&&!live||p.human&&p.seat!==mySeat;el.innerHTML=`${toonMarkup(p.seat)}<strong>${CHAR[p.seat].name}</strong><small>${p.seat===mySeat?'YOU':p.human?'FRIEND':'AI / OPEN'}</small>`;el.addEventListener('click',()=>chooseSeat(p.seat));out.append(el)}$('lobbyCount').textContent=`${humanCount()}/6 HUMAN PLAYERS · ${6-humanCount()} AI`;const detail=$('lobbyConnectedDetail');if(detail)detail.textContent=mode==='host'?`${connections.size} FRIEND CONNECTION${connections.size===1?'':'S'} · ${Math.max(0,5-connections.size)} AVAILABLE`:mode==='guest'?(live?'CONNECTED TO HOST':'CONNECTING TO HOST'):'SOLO GAME'}
 function chooseSeat(idx){if(!G||G.phase!=='lobby'||idx===mySeat||G.players[idx].human)return;if(mode==='guest'){if(!hostConnection?.open)return toast('Waiting for the host.');hostConnection.send({type:'choose',seat:idx});return}G.players[mySeat].human=false;G.players[mySeat].peerId=null;humanAt(idx,'host');mySeat=idx;chosen=idx;publish()}
 function startSolo(){stopConnections();mode='solo';G=newLobby();mySeat=chosen;humanAt(mySeat,'host');live=true;showLobby();announce('Vinny deals for a table full of trouble.',-1,'deal');publish()}
+/* v0.4.7: two-lane online. Lane 1 = direct WebRTC (PeerJS). Lane 2 = relay over
+   secure WebSockets through free public MQTT brokers (no database, no setup).
+   The host listens on both lanes; a friend tries direct first and falls back to
+   the relay automatically, so phones on mobile data / strict Wi-Fi can still join. */
+const RELAY_BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+const RELAY_ROOT='lostitall/v047/';
+let relayLinks=[];
+const relayTopic=(code,suffix)=>RELAY_ROOT+code.toUpperCase()+'/'+suffix;
+class MqttLink{
+ constructor(url){this.url=url;this.ws=null;this.subs=new Set();this.handlers=[];this.closed=false;this.ready=false;this.buf=new Uint8Array(0);this.ping=0;this.id='lita'+Math.random().toString(36).slice(2,12)}
+ connect(timeout=7000){
+  return new Promise((resolve,reject)=>{
+   let done=false;const finish=(ok,err)=>{if(done)return;done=true;clearTimeout(t);ok?resolve(this):reject(err)};
+   const t=setTimeout(()=>{finish(false,new Error('relay timeout'));try{this.ws?.close()}catch{}},timeout);
+   let ws;try{ws=new WebSocket(this.url,['mqtt'])}catch(e){finish(false,e);return}
+   this.ws=ws;ws.binaryType='arraybuffer';this.buf=new Uint8Array(0);
+   ws.onopen=()=>{ws.send(this.packet(0x10,[this.str('MQTT'),Uint8Array.of(4,2,0,45),this.str(this.id)]))};
+   ws.onmessage=e=>{this.feed(new Uint8Array(e.data),()=>{this.ready=true;for(const t of this.subs)this.sendSub(t);clearInterval(this.ping);this.ping=setInterval(()=>{try{this.ws?.readyState===1&&this.ws.send(Uint8Array.of(0xC0,0))}catch{}},20000);finish(true)})};
+   ws.onerror=()=>finish(false,new Error('relay unavailable'));
+   ws.onclose=()=>{this.ready=false;clearInterval(this.ping);finish(false,new Error('relay closed'));if(!this.closed&&this.wasUp)setTimeout(()=>{if(!this.closed)this.connect().catch(()=>{})},1500)};
+  }).then(l=>{this.wasUp=true;return l});
+ }
+ str(v){const b=new TextEncoder().encode(v);const o=new Uint8Array(b.length+2);o[0]=b.length>>8;o[1]=b.length&255;o.set(b,2);return o}
+ packet(type,parts){let len=parts.reduce((n,p)=>n+p.length,0);const head=[type];let x=len;do{let d=x%128;x=Math.floor(x/128);if(x>0)d|=128;head.push(d)}while(x>0);const o=new Uint8Array(head.length+len);o.set(head,0);let k=head.length;for(const p of parts){o.set(p,k);k+=p.length}return o}
+ feed(chunk,onConnack){
+  const b=new Uint8Array(this.buf.length+chunk.length);b.set(this.buf);b.set(chunk,this.buf.length);this.buf=b;
+  while(this.buf.length>=2){
+   let mult=1,len=0,i=1,byte;do{if(i>=this.buf.length)return;byte=this.buf[i++];len+=(byte&127)*mult;mult*=128}while(byte&128);
+   if(this.buf.length<i+len)return;
+   const type=this.buf[0]>>4,flags=this.buf[0]&15,body=this.buf.subarray(i,i+len);this.buf=this.buf.slice(i+len);
+   if(type===2){if(body[1]===0)onConnack()}
+   else if(type===3){const tl=(body[0]<<8)|body[1];const topic=new TextDecoder().decode(body.subarray(2,2+tl));let p=2+tl;if((flags>>1)&3)p+=2;const text=new TextDecoder().decode(body.subarray(p));let msg;try{msg=JSON.parse(text)}catch{continue}for(const h of this.handlers)try{h(topic,msg)}catch(e){console.warn(e)}}
+  }
+ }
+ sendSub(topic){if(!this.ready)return;try{this.ws.send(this.packet(0x82,[Uint8Array.of(0,1),this.str(topic),Uint8Array.of(0)]))}catch{}}
+ subscribe(topic){this.subs.add(topic);this.sendSub(topic)}
+ publish(topic,obj){if(!this.ready||this.ws?.readyState!==1)return false;const payload=new TextEncoder().encode(JSON.stringify(obj));try{this.ws.send(this.packet(0x30,[this.str(topic),payload]));return true}catch{return false}}
+ onMessage(fn){this.handlers.push(fn)}
+ close(){this.closed=true;clearInterval(this.ping);try{this.ws?.readyState===1&&this.ws.send(Uint8Array.of(0xE0,0))}catch{}try{this.ws?.close()}catch{}}
+}
+// A relay connection behaves like a PeerJS DataConnection: on/send/close/open/peer.
+class RelayConn{
+ constructor(link,peerName,outTopic,from){this.link=link;this.peer=peerName;this.outTopic=outTopic;this.from=from;this.open=false;this.h={};this.lastIn=Date.now();this.watch=0;this.relay=true}
+ on(e,f){(this.h[e]=this.h[e]||[]).push(f);return this}
+ emit(e,...a){for(const f of this.h[e]||[])try{f(...a)}catch(err){console.warn(err)}}
+ markOpen(){if(this.open)return;this.open=true;this.lastIn=Date.now();clearInterval(this.watch);this.watch=setInterval(()=>{if(this.open&&Date.now()-this.lastIn>30000)this.drop()},5000);this.emit('open')}
+ receive(d){this.lastIn=Date.now();this.emit('data',d)}
+ send(d){if(!this.open)throw new Error('Connection closed');this.link.publish(this.outTopic,{k:'d',from:this.from,d})}
+ drop(){if(!this.open)return;this.open=false;clearInterval(this.watch);this.emit('close')}
+ close(){if(this.open)this.link.publish(this.outTopic,{k:'bye',from:this.from});this.drop()}
+}
+async function connectRelays(){
+ const tries=RELAY_BROKERS.map(u=>new MqttLink(u).connect().catch(()=>null));
+ const links=(await Promise.all(tries)).filter(Boolean);relayLinks.push(...links);return links;
+}
+function closeRelays(){for(const l of relayLinks)try{l.close()}catch{}relayLinks=[]}
+
+function attachHostConnection(conn,session){
+ // Each incoming friend receives an independent data connection.
+ // Register data/error/close before open: a guest may send hello first.
+ conn.on('data',msg=>{if(session===netSession&&mode==='host')handleHostMessage(conn,msg)});
+ conn.on('close',()=>{if(session===netSession&&connections.get(conn.peer)===conn)guestGone(conn.peer)});
+ conn.on('error',err=>{if(session===netSession){if(connections.get(conn.peer)===conn)guestGone(conn.peer);toast('Friend connection failed: '+(err?.message||'network'))}});
+ conn.on('open',()=>{
+  if(session!==netSession)return;
+  if(!G||G.phase!=='lobby'){
+   const known=G?.players.some(p=>p.human&&p.peerId===conn.peer);
+   if(!known){try{conn.send({type:'rejected',reason:'This round has started. Ask the host for a new room.'})}catch{}}
+  }
+ });
+}
+function hostLaneReady(session,how){
+ if(session!==netSession||mode!=='host')return;
+ const first=!live;live=true;startHostHeartbeat();clearConnectionProblem();setHostReady(true);setStatus('ONLINE · ROOM '+room);
+ if(first){$('waitNote').textContent='ROOM ONLINE! Share the link or code with up to five friends on PC or mobile. Keep this tab open.';publish()}
+}
+async function startRelayHost(code,session){
+ const links=await connectRelays();if(session!==netSession||mode!=='host'){return false}
+ if(!links.length)return false;
+ const relayConns=new Map();
+ for(const link of links){
+  link.subscribe(relayTopic(code,'h'));
+  link.onMessage((topic,m)=>{
+   if(session!==netSession||mode!=='host'||topic!==relayTopic(code,'h')||!m||typeof m.from!=='string')return;
+   const from=m.from.slice(0,40),key='relay-'+from;let conn=relayConns.get(key);
+   if(m.k==='hi'){
+    if(conn&&conn.open){link.publish(relayTopic(code,'g/'+from),{k:'ok'});return}
+    conn=new RelayConn(link,key,relayTopic(code,'g/'+from),'host');relayConns.set(key,conn);
+    attachHostConnection(conn,session);link.publish(relayTopic(code,'g/'+from),{k:'ok'});conn.markOpen();
+   }else if(conn&&conn.open){conn.link=link;if(m.k==='d')conn.receive(m.d);else if(m.k==='bye'){relayConns.delete(key);conn.drop()}}
+  });
+ }
+ hostLaneReady(session,'relay');return true;
+}
 async function createRoom(){
- stopConnections();mode='host';G=newLobby();mySeat=chosen;humanAt(mySeat,'host');room=randomRoom();const session=netSession;
+ stopConnections();mode='host';G=newLobby();mySeat=chosen;humanAt(mySeat,'host');room=randomRoom();const session=netSession,code=room;
  showLobby();setHostReady(false);setStatus('CONNECTING · NOT READY');$('waitNote').textContent='Opening the online room. Do not share the code until ONLINE appears.';
+ let relayOk=null,directOk=null;
+ const bothFailed=msg=>{
+  if(session!==netSession||relayOk!==false||directOk!==false)return;
+  live=false;setHostReady(false);setStatus('ROOM CONNECTION FAILED');
+  $('waitNote').textContent='Could not host online: '+msg+'. Check your internet and press NEW ROOM.';
+  connectionProblem('Could not open the room: '+msg+'. Press NEW ROOM to try again.','host');toast('Host error: '+msg)
+ };
+ startRelayHost(code,session).then(ok=>{relayOk=ok;if(!ok)bothFailed('no online relay reachable')}).catch(()=>{relayOk=false;bothFailed('no online relay reachable')});
  try{
   const Peer=await loadPeerJs();if(session!==netSession||mode!=='host')return;
-  const created=new Peer(peerId(room),PEER_OPTIONS);peer=created;
-  created.on('connection',conn=>{
-   // Each incoming friend receives an independent data connection.
-   // Register data/error/close before open: a guest may send hello first.
-   conn.on('data',msg=>{if(session===netSession&&mode==='host')handleHostMessage(conn,msg)});
-   conn.on('close',()=>{if(session===netSession&&connections.get(conn.peer)===conn)guestGone(conn.peer)});
-   conn.on('error',err=>{if(session===netSession){if(connections.get(conn.peer)===conn)guestGone(conn.peer);toast('Friend connection failed: '+(err?.message||'network'))}});
-   conn.on('open',()=>{
-    if(session!==netSession)return;
-    if(!G||G.phase!=='lobby'){
-     try{conn.send({type:'rejected',reason:'This round has started. Ask the host for a new room.'})}catch{}
-     setTimeout(()=>{try{conn.close()}catch{}},300)
-    }
-   })
-  });
-  created.on('open',()=>{
-   if(session!==netSession)return;
-   live=true;startHostHeartbeat();clearConnectionProblem();setHostReady(true);setStatus('ONLINE · ROOM '+room);
-   $('waitNote').textContent='ROOM ONLINE! Share this link with up to five friends on PC or mobile. Keep this tab open. Some Wi-Fi networks block direct connections.';
-   publish()
-  });
+  const created=new Peer(peerId(code),PEER_OPTIONS);peer=created;
+  created.on('connection',conn=>attachHostConnection(conn,session));
+  created.on('open',()=>{directOk=true;hostLaneReady(session,'direct')});
   created.on('error',err=>{
    if(session!==netSession)return;
-   const type=err?.type||'';live=false;setHostReady(false);setStatus(type==='unavailable-id'?'CODE TAKEN · HOST AGAIN':'ROOM CONNECTION FAILED');
-   $('waitNote').textContent='Could not host online: '+(err?.message||'Check your internet')+'. Return to the menu and try hosting again.';
-   connectionProblem('Could not open the room: '+(err?.message||'network error')+'. Press NEW ROOM to try again.','host');toast('Host error: '+(err?.message||'network error'))
+   const type=err?.type||'';
+   if(['peer-unavailable','webrtc'].includes(type))return; // a single friend's direct attempt failed; relay still covers them
+   if(!created.open){directOk=false;bothFailed(err?.message||'network error')}
   });
   created.on('disconnected',()=>{
    if(session!==netSession)return;
-   live=false;setHostReady(false);setStatus('SIGNALING INTERRUPTED · RETRYING');
-   $('waitNote').textContent='Connection service interrupted. Trying to reconnect automatically. Keep this tab open.';
-   try{created.reconnect()}catch{}
+   try{if(!created.destroyed)created.reconnect()}catch{}
   })
- }catch(e){if(session!==netSession)return;live=false;setHostReady(false);setStatus('ONLINE UNAVAILABLE');$('waitNote').textContent=e.message;connectionProblem(e.message,'host');toast(e.message)}
+ }catch(e){directOk=false;bothFailed(e.message)}
+}
+function wireGuestConnection(conn,session,code){
+ hostConnection=conn;
+ conn.on('data',msg=>{if(session===netSession&&hostConnection===conn)handleGuestMessage(msg)});
+ conn.on('open',()=>{
+  if(session!==netSession||hostConnection!==conn)return;
+  setStatus('CONNECTED · REQUESTING SEAT');
+  let attempts=0;clearInterval(helloRetry);
+  const hello=()=>{
+   if(session!==netSession||!joinPending||!conn.open||hostConnection!==conn){clearInterval(helloRetry);return}
+   if(++attempts>20){connectionIssue('Connected to host but did not receive a seat. Ask host to restart the room.');return}
+   try{conn.send({type:'hello',seat:chosen,token:guestIdentity,version:'0.4.7'})}catch{}
+  };
+  hello();helloRetry=setInterval(hello,1000)
+ });
+ conn.on('close',()=>{
+  if(session!==netSession||hostConnection!==conn)return;
+  if(joinPending){guestFallback(session,code,'The room connection closed');return}
+  if(live){live=false;recoverGuest('Host connection lost')}
+ });
+ conn.on('error',err=>{if(session===netSession&&hostConnection===conn&&joinPending)guestFallback(session,code,'Connection error: '+(err?.message||'network'))});
+}
+let relayJoinSession=-1,relayJoinFailed=false,directJoinFailed=false;
+function guestFallback(session,code,reason){
+ // Direct lane failed: switch to the relay. Only give up when both lanes failed.
+ if(session!==netSession||!joinPending)return;
+ directJoinFailed=true;
+ if(relayJoinSession!==session){startRelayJoin(session,code);return}
+ if(relayJoinFailed)recoverGuest(reason);
+}
+async function startRelayJoin(session,code){
+ if(relayJoinSession===session)return;relayJoinSession=session;relayJoinFailed=false;
+ if(hostConnection&&!hostConnection.open){try{hostConnection.close()}catch{}hostConnection=null}
+ setStatus('CONNECTING VIA RELAY · '+code);
+ const links=await connectRelays();if(session!==netSession||!joinPending)return;
+ if(!links.length){relayJoinFailed=true;if(directJoinFailed)recoverGuest('Could not reach the online service. Check your internet.');return}
+ const me=guestIdentity.slice(0,12)+Math.random().toString(36).slice(2,6);let chosenConn=null;
+ const conns=links.map(link=>{
+  const conn=new RelayConn(link,'relay-host',relayTopic(code,'h'),me);
+  link.subscribe(relayTopic(code,'g/'+me));
+  link.onMessage((topic,m)=>{
+   if(session!==netSession||topic!==relayTopic(code,'g/'+me)||!m)return;
+   if(m.k==='ok'){if(!chosenConn&&!(hostConnection&&hostConnection.open)){chosenConn=conn;wireGuestConnection(conn,session,code);conn.markOpen();for(const l of links)if(l!==link)l.close()}else if(chosenConn===conn)conn.lastIn=Date.now()}
+   else if(chosenConn===conn){if(m.k==='d')conn.receive(m.d);else if(m.k==='bye')conn.drop()}
+  });
+  return conn;
+ });
+ let tries=0;const knock=setInterval(()=>{
+  if(session!==netSession||!joinPending||chosenConn||(hostConnection&&hostConnection.open)){clearInterval(knock);return}
+  if(++tries>12){clearInterval(knock);relayJoinFailed=true;if(directJoinFailed||!peer?.open)recoverGuest('Room '+code+' not found. Ask your friend to keep the host room open.');return}
+  for(const l of links)l.publish(relayTopic(code,'h'),{k:'hi',from:me});
+ },1000);
+ for(const l of links)l.publish(relayTopic(code,'h'),{k:'hi',from:me});
 }
 async function joinRoom(code,retrying=false){
  code=parseRoomCode(code);if(!code){toast('Enter the 4-character code or a valid invite link.');return}
  const previousAttempts=autoJoinAttempts;if(!retrying)autoJoinAttempts=0;stopConnections();if(retrying)autoJoinAttempts=previousAttempts;clearConnectionProblem();mode='guest';room=code;mySeat=-1;G=null;joinPending=true;const session=netSession;
+ directJoinFailed=false;relayJoinFailed=false;
  ensureCrossPlatformNotice();screen('lobbyScreen');$('lobbyCode').textContent=code;$('lobbyCodeWrap').hidden=false;$('copyCodeBtn').hidden=true;$('inviteLinkBtn').hidden=true;
  $('startRoomBtn').hidden=true;$('waitNote').textContent='Looking for '+code+'… keep this page open while connecting. The host must show ONLINE.';$('lobbyPlayers').replaceChildren();$('lobbyCount').textContent='CONNECTING';setStatus('FINDING HOST '+code);
  // Never leave joiners on a spinner indefinitely.
  joinDeadline=setTimeout(()=>{if(session===netSession&&joinPending){recoverGuest('Joining timed out')}},30000);
+ // If the direct lane has not connected within 5 seconds, bring in the relay.
+ setTimeout(()=>{if(session===netSession&&joinPending&&!(hostConnection&&hostConnection.open))startRelayJoin(session,code)},5000);
  try{
   const Peer=await loadPeerJs();if(session!==netSession||mode!=='guest')return;
   const created=new Peer(undefined,PEER_OPTIONS);peer=created;
   created.on('open',()=>{
-   if(session!==netSession)return;
+   if(session!==netSession||!joinPending||(hostConnection&&hostConnection.open))return;
    setStatus('CONNECTING TO ROOM '+code);
-   const conn=created.connect(peerId(code),{reliable:true,serialization:'json'});hostConnection=conn;
-   conn.on('data',msg=>{if(session===netSession)handleGuestMessage(msg)});
-   conn.on('open',()=>{
-    if(session!==netSession)return;
-    setStatus('CONNECTED · REQUESTING SEAT');
-    let attempts=0;
-    const hello=()=>{
-     if(session!==netSession||!joinPending||!conn.open){clearInterval(helloRetry);return}
-     if(++attempts>20){connectionIssue('Connected to host but did not receive a seat. Ask host to restart the room.');return}
-     try{conn.send({type:'hello',seat:chosen,token:guestIdentity,version:'0.4.6'})}catch{}
-    };
-    hello();helloRetry=setInterval(hello,1000)
-   });
-   conn.on('close',()=>{
-    if(session!==netSession)return;
-    if(joinPending){recoverGuest('The room connection closed');return}
-    if(live){live=false;recoverGuest('Host connection lost')}
-   });
-   conn.on('error',err=>{if(session===netSession&&joinPending)recoverGuest('Connection error: '+(err?.message||'network blocked; try another Wi-Fi or mobile data'))})
+   wireGuestConnection(created.connect(peerId(code),{reliable:true,serialization:'json'}),session,code);
   });
   created.on('error',err=>{
    if(session!==netSession)return;
-   if(joinPending){recoverGuest(err?.type==='peer-unavailable'?'Room not found. Ask your friend to keep their host room open.':err?.type==='webrtc'?'Direct connection blocked by this network. Try mobile data or another Wi-Fi.':'Online join failed: '+(err?.message||err?.type||'network'))}
-   else if(live){setStatus('NETWORK WARNING · '+(err?.type||'error'))}
+   if(joinPending)guestFallback(session,code,err?.type==='peer-unavailable'?'Room not found. Ask your friend to keep their host room open.':'Online join failed: '+(err?.message||err?.type||'network'));
   })
- }catch(e){if(session===netSession)recoverGuest(e.message)}
+ }catch(e){if(session===netSession)guestFallback(session,code,e.message)}
 }
-function handleHostMessage(conn,msg){if(!msg||typeof msg!=='object')return;let seat=G?.players.findIndex(p=>p.peerId===conn.peer&&p.human)??-1;if(msg.type==='hello'){if(seat>=0){conn.send({type:'welcome',seat,room,version:'0.4.6'});publish();return}const token=typeof msg.token==='string'?msg.token.slice(0,128):'';const claim=token&&seatClaims.get(token);if(claim&&G?.players[claim.seat]?.human&&G.players[claim.seat].peerId===claim.peer){const old=connections.get(claim.peer);if(old&&old!==conn)try{old.close()}catch{};G.players[claim.seat].peerId=conn.peer;seatClaims.set(token,{seat:claim.seat,peer:conn.peer});connections.set(conn.peer,conn);conn.send({type:'welcome',seat:claim.seat,room,version:'0.4.6',reconnected:true});publish();return}if(!G||G.phase!=='lobby'){conn.send({type:'rejected',reason:'The match is already running.'});return}let want=Number.isInteger(msg.seat)?msg.seat:-1;if(want<0||want>=6||G.players[want].human)want=G.players.findIndex(p=>!p.human);if(want<0){conn.send({type:'rejected',reason:'All six seats are full.'});return}humanAt(want,conn.peer);connections.set(conn.peer,conn);if(token)seatClaims.set(token,{seat:want,peer:conn.peer});conn.send({type:'welcome',seat:want,room,version:'0.4.6'});announce(CHAR[want].name+' joined the table!',-1,'deal');publish();return}
+function handleHostMessage(conn,msg){if(!msg||typeof msg!=='object')return;let seat=G?.players.findIndex(p=>p.peerId===conn.peer&&p.human)??-1;if(msg.type==='hello'){if(seat>=0){conn.send({type:'welcome',seat,room,version:'0.4.7'});publish();return}const token=typeof msg.token==='string'?msg.token.slice(0,128):'';const claim=token&&seatClaims.get(token);if(claim&&G?.players[claim.seat]?.human&&G.players[claim.seat].peerId===claim.peer){const old=connections.get(claim.peer);if(old&&old!==conn)try{old.close()}catch{};G.players[claim.seat].peerId=conn.peer;seatClaims.set(token,{seat:claim.seat,peer:conn.peer});connections.set(conn.peer,conn);conn.send({type:'welcome',seat:claim.seat,room,version:'0.4.7',reconnected:true});publish();return}if(!G||G.phase!=='lobby'){conn.send({type:'rejected',reason:'The match is already running.'});return}let want=Number.isInteger(msg.seat)?msg.seat:-1;if(want<0||want>=6||G.players[want].human)want=G.players.findIndex(p=>!p.human);if(want<0){conn.send({type:'rejected',reason:'All six seats are full.'});return}humanAt(want,conn.peer);connections.set(conn.peer,conn);if(token)seatClaims.set(token,{seat:want,peer:conn.peer});conn.send({type:'welcome',seat:want,room,version:'0.4.7'});announce(CHAR[want].name+' joined the table!',-1,'deal');publish();return}
 if(seat<0||seat>=6)return;
 if(msg.type==='ping'){try{conn.send({type:'pong'})}catch{};return}
-if(msg.type==='choose'&&G.phase==='lobby'){let target=msg.seat;if(!Number.isInteger(target)||target<0||target>=6||G.players[target].human)return;G.players[seat].human=false;G.players[seat].peerId=null;humanAt(target,conn.peer);for(const [token,claim] of seatClaims)if(claim.peer===conn.peer)seatClaims.set(token,{seat:target,peer:conn.peer});conn.send({type:'welcome',seat:target,room,version:'0.4.6'});publish()}
+if(msg.type==='choose'&&G.phase==='lobby'){let target=msg.seat;if(!Number.isInteger(target)||target<0||target>=6||G.players[target].human)return;G.players[seat].human=false;G.players[seat].peerId=null;humanAt(target,conn.peer);for(const [token,claim] of seatClaims)if(claim.peer===conn.peer)seatClaims.set(token,{seat:target,peer:conn.peer});conn.send({type:'welcome',seat:target,room,version:'0.4.7'});publish()}
 else if(msg.type==='action'&&G.phase==='betting')move(seat,msg.action);
 else if(msg.type==='leave'){for(const [token,c] of seatClaims)if(c.peer===conn.peer)seatClaims.delete(token);guestGone(conn.peer);try{conn.close()}catch{}}
 }
@@ -1015,7 +1135,7 @@ $('joinSubmit').addEventListener('click',()=>{const code=parseRoomCode($('joinCo
 $('joinCode').addEventListener('keydown',e=>{if(e.key==='Enter')$('joinSubmit').click()});
 $('retryJoinBtn').addEventListener('click',()=>{const code=room;if(code)joinRoom(code)});
 $('retryHostBtn').addEventListener('click',()=>createRoom());
-$('copyErrorBtn').addEventListener('click',async()=>{const error=$('connectionProblem').textContent;const msg=`I Lost It All v0.3.9 | ${$('roomStatus').textContent} | ${error} | ${navigator.userAgent}`;try{await navigator.clipboard.writeText(msg);toast('Error copied. Send it to the developer.')}catch{modal('CONNECTION DETAILS',`<p style="overflow-wrap:anywhere">${error}</p>`)}});
+$('copyErrorBtn').addEventListener('click',async()=>{const error=$('connectionProblem').textContent;const msg=`I Lost It All v0.4.7 | ${$('roomStatus').textContent} | ${error} | ${navigator.userAgent}`;try{await navigator.clipboard.writeText(msg);toast('Error copied. Send it to the developer.')}catch{modal('CONNECTION DETAILS',`<p style="overflow-wrap:anywhere">${error}</p>`)}});
 $('joinCancel').addEventListener('click',()=>$('joinPopup').hidden=true);
 $('startRoomBtn').addEventListener('click',()=>beginRun());$('backFromLobby').addEventListener('click',()=>{if(mode==='host'||mode==='guest'){screen('menuScreen');toast('Online room stays open while you browse the game.');}else{leaveCurrent();screen('menuScreen')}});$('copyCodeBtn').addEventListener('click',async()=>{if(mode!=='host'||!live)return toast('Wait until the room shows ONLINE.');try{await navigator.clipboard.writeText(room);toast('Room code copied: '+room)}catch{modal('YOUR ROOM CODE',`<p><b>${room}</b></p><p>Send this four-character code to your friends.</p>`)}});
 $('inviteLinkBtn').addEventListener('click',async()=>{if(mode!=='host'||!live)return toast('Wait until the room shows ONLINE.');const url=inviteURL();try{if(navigator.share){await navigator.share({title:'I Lost It All — Poker',text:'Join my poker lobby!',url});return}await navigator.clipboard.writeText(url);toast('Invite link copied. Send it to your friends.')}catch(e){if(e?.name==='AbortError')return;try{await navigator.clipboard.writeText(url);toast('Invite link copied!')}catch{modal('SHARE THIS INVITE',`<p>Send your friends this link:</p><p style="overflow-wrap:anywhere">${url}</p>`)}}});
@@ -1181,6 +1301,7 @@ const renderViewBeforeDealerEffects=renderView;
 renderView=function(v){renderViewBeforeDealerEffects(v);dealerAnimateView(v)};
 
 mountCartoons();syncFullscreen();updateDebt();
+{const qs=new URLSearchParams(location.search);const inviteCode=qs.get('room')&&parseRoomCode(location.href);if(inviteCode&&(!qs.has('test')||qs.has('autojoin')))setTimeout(()=>joinRoom(inviteCode),350)}
 
 if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5,compare,handValue,deck,judge:handValue,getState:()=>G,beginRun,startHand,move,createSolo:startSolo,publicState,renderView,showdown,foldWin,performCashout,death,quitTable,botDecision,animateTableEvent,chooseSeat,createRoom,joinRoom,inviteURL,stopConnections,parseRoomCode};
 })();

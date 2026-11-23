@@ -1714,14 +1714,33 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
 #poker3dStatus{position:absolute;top:9px;left:9px;z-index:4;background:#140b10b8;color:#ffdf9e;font-size:11px;padding:5px 9px;border-radius:5px;pointer-events:none}
 @media(max-width:600px){#tableScreen .tableScene{min-height:470px!important}}
 </style>
+
+<style id="poker3d-crash-fallback-v0432">
+#tableScreen .tableScene.poker3d-fallback{background:radial-gradient(ellipse at 50% 44%,#251b1c,#0c0b0d)!important;overflow:visible!important}
+#tableScreen .tableScene.poker3d-fallback>.tableWrap{visibility:visible!important;pointer-events:auto!important;opacity:1!important}
+#tableScreen .tableScene.poker3d-fallback>.dealerStrip{visibility:visible!important;pointer-events:auto!important}
+#tableScreen .tableScene.poker3d-fallback #poker3dCanvas{display:none!important}
+#tableScreen .tableScene.poker3d-fallback #poker3dStatus{background:#34221cd9;color:#ffe8bc}
+</style>
 <script id="real-3d-scene-v0416">
 (function(){
  const host=document.getElementById('tableScene');if(!host)return;
  const status=document.createElement('div');status.id='poker3dStatus';status.textContent='LOADING 3D POKER ROOM';host.append(status);
  const canvas=document.createElement('canvas');canvas.id='poker3dCanvas';host.prepend(canvas);
+ function recover(reason){
+  console.error('[Poker 3D] Starting classic table fallback:',reason);
+  canvas.style.display='none';
+  host.querySelector('.tableWrap')?.style.setProperty('visibility','visible','important');
+  host.querySelector('.dealerStrip')?.style.setProperty('visibility','visible','important');
+  const monitor=host.querySelector('#dealerMonitor3d');if(monitor)monitor.style.display='none';
+  host.classList.add('poker3d-fallback');
+  status.textContent='TABLE VIEW · 3D UNAVAILABLE';
+  status.title=String(reason||'');
+ }
  function boot(){
-  if(!window.THREE){status.textContent='3D ENGINE UNAVAILABLE — CONNECT TO INTERNET';host.querySelector('.tableWrap').style.setProperty('visibility','visible','important');return;}
-  const T=THREE,renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
+  try{
+  if(!window.THREE){recover('3D engine missing');return;}
+  const T=THREE,mobile=window.innerWidth<700,renderer=new T.WebGLRenderer({canvas,antialias:!mobile,alpha:false,powerPreference:'default'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,mobile?1.35:1.8));renderer.shadowMap.enabled=!mobile;renderer.shadowMap.type=T.PCFSoftShadowMap;
   const world=new T.Scene();world.background=new T.Color('#171016');world.fog=new T.Fog('#171016',12,26);
   const camera=new T.PerspectiveCamera(65,1,.08,70);camera.position.set(0,1.95,2.65);
   world.add(new T.HemisphereLight(0xffd5a2,0x252335,1.4));const lamp=new T.PointLight(0xffd49b,95,13);lamp.position.set(0,4.5,0);lamp.castShadow=true;world.add(lamp);
@@ -2133,7 +2152,7 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
   host.appendChild(dealerMonitor);
   const dealerCanvas=dealerMonitor.querySelector('canvas');
   let dealerRenderer=null;
-  try {dealerRenderer=new T.WebGLRenderer({canvas:dealerCanvas,antialias:true,alpha:false});dealerRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));}catch(e){dealerMonitor.querySelector('.dealerMonitorTitle').textContent='VINNY CAM · CARDS';}
+  try {if(!mobile){dealerRenderer=new T.WebGLRenderer({canvas:dealerCanvas,antialias:true,alpha:false});dealerRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.3));}}catch(e){dealerMonitor.querySelector('.dealerMonitorTitle').textContent='VINNY CAM · CARDS';}
   const dealerCamera=new T.PerspectiveCamera(48,1,.1,30);
   dealerCamera.position.set(0,4.1,-1.75);dealerCamera.lookAt(0,.9,.12);
   let monitorWidth=0,monitorHeight=0;
@@ -2216,10 +2235,26 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
    syncBoardFaces();syncChipStacks();updateChipTransfers();
    board.forEach((b,i)=>{b.visible=i<shown.length&&!dealing.some(d=>d.boardIndex===i);});
   }
-  let frames=0,lastFrame=0;function animate(t){requestAnimationFrame(animate);const dt=Math.min(.05,(t-lastFrame)/1000||0);lastFrame=t;if(!document.getElementById('tableScreen').classList.contains('active'))return;update();bodies.forEach((b,i)=>{b.g.position.y=Math.sin(t*.0016+i)*.018;});animatePlayers(t);animateShuffle(t);animateDeals(dt,t);animateFlyingChips(dt);updateDealerCards();renderer.render(world,camera);if(dealerRenderer){sizeDealer();dealerRenderer.render(world,dealerCamera);}if(frames++===2)status.textContent='3D ROOM · ANIMATED PLAYERS · DRAG TO LOOK AROUND';}requestAnimationFrame(animate);
+  let frames=0,lastFrame=0;function animate(t){if(host.classList.contains('poker3d-fallback'))return;try{const dt=Math.min(.05,(t-lastFrame)/1000||0);lastFrame=t;if(!document.getElementById('tableScreen').classList.contains('active'))return;update();bodies.forEach((b,i)=>{b.g.position.y=Math.sin(t*.0016+i)*.018;});animatePlayers(t);animateShuffle(t);animateDeals(dt,t);animateFlyingChips(dt);updateDealerCards();renderer.render(world,camera);if(dealerRenderer){sizeDealer();dealerRenderer.render(world,dealerCamera);}if(frames++===2)status.textContent='3D POKER ROOM · READY';requestAnimationFrame(animate);}catch(err){recover(err?.stack||err?.message||String(err));}}requestAnimationFrame(animate);
   let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});canvas.addEventListener('pointerup',e=>{if(!down)return;const dx=e.clientX-down.x;down=null;if(Math.abs(dx)<12)return;const current=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;table.style.setProperty('--cameraYaw',Math.max(-70,Math.min(70,current+dx*.14))+'deg');});
+  }catch(err){recover(err?.stack||err?.message||String(err));}
  }
- const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js';script.onload=boot;script.onerror=()=>{status.textContent='3D ENGINE NEEDS INTERNET';host.querySelector('.tableWrap').style.setProperty('visibility','visible','important');};document.head.append(script);
+ // Load a pinned, legacy-compatible THREE build from either CDN.
+ // Never leave the poker table hidden if both hosts fail.
+ const engines=[
+  'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.1/three.min.js',
+  'https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js',
+  'https://unpkg.com/three@0.159.0/build/three.min.js'
+ ];
+ function loadEngine(i=0){
+  if(window.THREE){boot();return;}
+  if(i>=engines.length){recover('3D library could not be downloaded');return;}
+  const script=document.createElement('script');script.src=engines[i];script.async=true;
+  script.onload=()=>window.THREE?boot():loadEngine(i+1);
+  script.onerror=()=>loadEngine(i+1);
+  document.head.append(script);
+ }
+ loadEngine();
 })();
 </script>
 

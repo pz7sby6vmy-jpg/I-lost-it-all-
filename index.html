@@ -1326,14 +1326,84 @@ mountCartoons();syncFullscreen();updateDebt();
 if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5,compare,handValue,deck,judge:handValue,getState:()=>G,beginRun,startHand,move,createSolo:startSolo,publicState,renderView,showdown,foldWin,performCashout,death,quitTable,botDecision,animateTableEvent,chooseSeat,createRoom,joinRoom,inviteURL,stopConnections,parseRoomCode};
 })();
 </script>
+<style>
+/* v0.4.8 — smooth seat-level camera */
+#tableScreen .tableWrap{--cameraYaw:0deg;--cameraShift:0px;transform:perspective(1250px) rotateX(12deg) rotateY(var(--cameraYaw)) translateX(var(--cameraShift))!important;transform-origin:50% 80%;transition:transform .38s cubic-bezier(.2,.7,.2,1);will-change:transform}
+#tableScreen .tableWrap .seat.cameraFocus:not(.you){outline:3px solid #ffcf79;filter:brightness(1.16);z-index:10}
+#tableScreen .povControls{user-select:none;touch-action:pan-y}
+#tableScreen #povLabel{min-width:190px;font-size:12px}
+#tableScreen .tableScene{touch-action:pan-y}
+@media(prefers-reduced-motion:reduce){#tableScreen .tableWrap{transition:none}}
+</style>
 <script>
 (function(){
- function updateLook(){const table=document.querySelector('.tableWrap');if(!table)return;table.classList.toggle('lookLeft',lookDirection<0);table.classList.toggle('lookRight',lookDirection>0);const label=document.getElementById('povLabel');if(label)label.textContent=(lookDirection<0?'LOOKING LEFT':lookDirection>0?'LOOKING RIGHT':'YOUR SEAT · TABLE VIEW')+' · CHAIR '+(mySeat+1)}
- document.getElementById('povLeft')?.addEventListener('click',()=>{lookDirection=-1;updateLook()});
- document.getElementById('povRight')?.addEventListener('click',()=>{lookDirection=1;updateLook()});
- document.getElementById('povCenter')?.addEventListener('click',()=>{lookDirection=0;updateLook()});
- const label=document.getElementById('povLabel');if(label){new MutationObserver(()=>{});}
- window.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'){lookDirection=-1;updateLook()}if(e.key==='ArrowRight'){lookDirection=1;updateLook()}if(e.key==='ArrowUp'){lookDirection=0;updateLook()}});
- setInterval(()=>{if(document.getElementById('tableScreen')?.classList.contains('active'))updateLook()},1500);
+ let yaw=0,dragStart=null,dragYaw=0;
+ const clamp=(n,a,b)=>Math.min(b,Math.max(a,n));
+ const scene=document.getElementById('tableScene');
+ const table=document.querySelector('#tableScreen .tableWrap');
+ const label=document.getElementById('povLabel');
+ function draw(){
+  if(!table)return;
+  table.classList.remove('lookLeft','lookRight');
+  table.style.setProperty('--cameraYaw',(-yaw)+'deg');
+  table.style.setProperty('--cameraShift',(-yaw*.8)+'px');
+  const focus=yaw < -22 ? 1 : yaw > 22 ? 5 : null;
+  table.querySelectorAll('.seat').forEach(el=>el.classList.toggle('cameraFocus',focus!==null&&el.classList.contains('pov'+focus)));
+  if(label){const seat=typeof mySeat==='number'&&mySeat>=0?mySeat+1:'—';label.textContent=(focus===1?'LOOKING AT PLAYER ON LEFT':focus===5?'LOOKING AT PLAYER ON RIGHT':'FACING THE TABLE')+' · SEAT '+seat;}
+ }
+ function setYaw(v){yaw=clamp(v,-48,48);draw()}
+ document.getElementById('povLeft')?.addEventListener('click',()=>setYaw(yaw-24));
+ document.getElementById('povRight')?.addEventListener('click',()=>setYaw(yaw+24));
+ document.getElementById('povCenter')?.addEventListener('click',()=>setYaw(0));
+ scene?.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;dragStart=e.clientX;dragYaw=yaw});
+ scene?.addEventListener('pointermove',e=>{if(dragStart===null)return;if(Math.abs(e.clientX-dragStart)>8)setYaw(dragYaw+(e.clientX-dragStart)*.17)});
+ const finish=()=>{dragStart=null};scene?.addEventListener('pointerup',finish);scene?.addEventListener('pointercancel',finish);scene?.addEventListener('pointerleave',finish);
+ window.addEventListener('keydown',e=>{if(!document.getElementById('tableScreen')?.classList.contains('active')||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))return;if(e.key==='ArrowLeft'||e.key==='a'){setYaw(yaw-24);e.preventDefault()}else if(e.key==='ArrowRight'||e.key==='d'){setYaw(yaw+24);e.preventDefault()}else if(e.key==='ArrowUp'||e.key==='Home'){setYaw(0);e.preventDefault()}});
+ const seats=document.getElementById('seats');if(seats)new MutationObserver(draw).observe(seats,{childList:true});
+ draw();
 })();
-</script></body></html>
+</script>
+<style>
+/* v0.4.9 — six visible seated characters and animated hands */
+#tableScreen .tableWrap .seat:not(.pov0) .seatBody{display:block!important;position:relative;width:100%;height:105px;overflow:visible;transform-origin:50% 95%;animation:playerBreathing 3.2s ease-in-out infinite}
+#tableScreen .tableWrap .seat:not(.pov0){min-height:165px;overflow:visible}
+#tableScreen .tableWrap .seat:not(.pov0) .seatBody svg{display:block;width:100%;height:110px;max-height:110px;filter:drop-shadow(0 4px 3px #0009)}
+#tableScreen .tableWrap .seat:not(.pov0) .seatBadge{position:absolute;top:-8px;left:50%;transform:translateX(-50%);white-space:nowrap;z-index:3;background:#201015;border:1px solid #c39254;border-radius:12px;padding:2px 6px;font-size:8px;color:#ffe2b2}
+#tableScreen .tableWrap .seat:not(.pov0) .seatInfo{position:relative;z-index:4;background:#1b1118dd;border-radius:5px;padding:2px 5px}
+#tableScreen .tableWrap .seat:not(.pov0) .playerHands{position:absolute;inset:0;pointer-events:none;z-index:5}
+#tableScreen .tableWrap .seat:not(.pov0) .playerHand{position:absolute;bottom:2px;width:25px;height:36px;border:3px solid #201116;border-radius:45% 45% 42% 42%;background:var(--handTone,#c98b65);box-shadow:inset -4px -3px #0002,0 3px 3px #0008;transform-origin:50% 100%;animation:handIdle 2.4s ease-in-out infinite}
+#tableScreen .playerHand.left{left:3%;transform:rotate(-22deg)}
+#tableScreen .playerHand.right{right:3%;animation-delay:-1.2s}
+#tableScreen .seat.acting .playerHand.right{animation:handBet .8s ease-in-out infinite alternate}
+#tableScreen .seat.winner .playerHand{animation:handWin .55s ease-in-out infinite alternate}
+#tableScreen .seat.folded .playerHand{animation:none;opacity:.65}
+#tableScreen .tableWrap .seat.pov0 .seatBody{display:none!important}
+#tableScreen .tableWrap .seat.pov0 .selfHands{position:absolute;display:flex;justify-content:space-between;left:-90px;right:-90px;bottom:0;pointer-events:none}
+#tableScreen .tableWrap .seat.pov0 .selfHands span{display:block;width:55px;height:78px;border:5px solid #281716;border-radius:45% 45% 30% 30%;background:#c88c6a;box-shadow:0 6px 10px #0008;animation:handIdle 3s ease-in-out infinite}
+#tableScreen .tableWrap .seat.pov0 .selfHands span:last-child{animation-delay:-1.5s}
+@keyframes playerBreathing{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes handIdle{0%,100%{translate:0 0;rotate:-5deg}50%{translate:0 -4px;rotate:6deg}}
+@keyframes handBet{from{translate:0 0;rotate:0deg}to{translate:-10px -28px;rotate:-20deg}}
+@keyframes handWin{from{translate:0 0}to{translate:0 -24px}}
+@media(max-width:560px){#tableScreen .tableWrap .seat:not(.pov0){min-height:115px}#tableScreen .tableWrap .seat:not(.pov0) .seatBody{height:65px}#tableScreen .tableWrap .seat:not(.pov0) .seatBody svg{height:72px;max-height:72px}#tableScreen .tableWrap .seat:not(.pov0) .playerHand{width:15px;height:22px;border-width:2px}#tableScreen .tableWrap .seat.pov0 .selfHands{left:-48px;right:-48px}#tableScreen .tableWrap .seat.pov0 .selfHands span{width:30px;height:47px;border-width:3px}}
+@media(prefers-reduced-motion:reduce){#tableScreen .playerHand,#tableScreen .seatBody{animation:none!important}}
+</style>
+<script>
+(function(){
+ const seats=document.getElementById('seats');if(!seats)return;
+ function decorate(){
+  seats.querySelectorAll('.seat').forEach(el=>{
+   if(el.querySelector('.playerHands,.selfHands'))return;
+   if(el.classList.contains('pov0')){
+    const hands=document.createElement('div');hands.className='selfHands';hands.setAttribute('aria-hidden','true');hands.innerHTML='<span></span><span></span>';el.appendChild(hands);return;
+   }
+   const body=el.querySelector('.seatBody');if(!body)return;
+   const hands=document.createElement('div');hands.className='playerHands';hands.setAttribute('aria-hidden','true');
+   hands.innerHTML='<span class="playerHand left"></span><span class="playerHand right"></span>';
+   body.appendChild(hands);
+  });
+ }
+ new MutationObserver(decorate).observe(seats,{childList:true});decorate();
+})();
+</script>
+</body></html>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.7 Friends Edition Multiplayer</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.15 3D Camera & Cards</title>
 <style>:root{--red:#b82626;--wine:#4b111a;--gold:#efb25a;--cream:#ffe6bc;--ink:#100b0e;--felt:#125940;--mint:#80e6a2;--gray:#b7afa8}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;}body{background:radial-gradient(at 40% -25%,#654035 0%,#1c1015 45%,#09080b 100%);color:var(--cream);font:600 16px/1.35 system-ui,Arial,sans-serif;overflow-x:hidden}button,input{font:inherit}button{touch-action:manipulation;cursor:pointer}button:disabled{opacity:.39;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid #ffdf91;outline-offset:2px}[hidden]{display:none!important}.screen{display:none;min-height:100vh;min-height:100dvh}.screen.active{display:block}h1,h2,h3,p{margin-top:0}.display{font-family:Impact,'Arial Black',system-ui,sans-serif;letter-spacing:.045em;line-height:1;transform:skew(-3deg)}.goldText{color:var(--gold)}.redText{color:#ed3d34}.muted{color:#bcada5;font-size:13px}.btn{border:2px solid #090709;border-bottom-width:5px;border-radius:5px;background:#ad2825;color:#fff2dc;text-shadow:1px 2px #42101d;box-shadow:0 5px 0 #10080a;font-family:Impact,'Arial Black',sans-serif;font-size:clamp(15px,2.5vw,20px);padding:12px 16px;letter-spacing:.055em;min-height:49px;transition:filter .13s,transform .13s}.btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 2px 0 #10080a}.btn:hover:not(:disabled){filter:brightness(1.2)}.btn.gold{background:#cb8839;color:#190d0c;text-shadow:none}.btn.green{background:#258266}.btn.outline{background:#251b20;border-color:#78543f}.btn.sm{font-size:13px;padding:8px 11px;min-height:38px}.panel{background:linear-gradient(155deg,#25161b,#130e12);border:3px solid #070707;outline:1px solid #865037;box-shadow:0 13px 40px #0009}
 #menuScreen{display:none;place-items:center;padding:clamp(9px,3vw,30px)}#menuScreen.active{display:grid}.menuShell{width:min(1150px,100%);min-height:min(86vh,780px);display:grid;grid-template-columns:1.1fr .9fr;overflow:hidden}.menuArt{position:relative;background:linear-gradient(0deg,#160a10b8 0%,transparent 40%),linear-gradient(90deg,transparent 75%,#1a0e16 100%),var(--cover) 50% 50%/cover;min-height:560px}.menuArt:after{content:'';position:absolute;inset:auto 0 0;height:43px;background:repeating-linear-gradient(110deg,transparent 0 32px,#d926253a 32px 44px)}.menuRight{display:flex;flex-direction:column;gap:15px;justify-content:center;padding:clamp(16px,4.5vw,62px);background:radial-gradient(at 0% 45%,#6d2225 0%,#251216 56%,#100c10 100%);text-align:center}.menuTitle{font-size:clamp(44px,6vw,84px);color:#ffe2aa;text-shadow:4px 6px 0 #180a10,7px 9px 0 #a21722;margin:0;line-height:.95}.menuTitle em{color:#d92b29;font-style:normal}.eyebrow{color:var(--gold);letter-spacing:.28em;font-size:12px;font-weight:900}.menuHint{font-size:13px;color:#c0a49b;margin:-2px 0}.menuActions{display:grid;gap:9px;margin-top:10px}.menuActions .btn{font-size:21px;min-height:52px}.debtPlate{background:#09090d;border:3px solid #9a2524;box-shadow:0 3px 0 #000;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:13px}.debtPlate b{font-family:Impact,'Arial Black',sans-serif;color:#ee372d;font-size:30px}.version{font-size:11px;color:#ad9b91}
@@ -1634,6 +1634,73 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
  };
  new MutationObserver(apply).observe(table,{attributes:true,attributeFilter:['style']});
  apply();
+})();
+</script>
+<style id="camera-3d-v0415">
+/* Camera is a stationary tabletop with a separate parallax character layer. */
+#tableScreen .tableScene{--look:0;perspective:1000px;touch-action:pan-y}
+#tableScreen .tableScene:before{background-position:calc(50% + var(--wallShift,0px)) center;}
+#tableScreen .tableWrap{--gazeOffset:0px!important;transform:translate(-50%,-4%) perspective(1300px) rotateX(49deg)!important}
+#tableScreen .tableWrap .seat:not(.pov0){
+ --depth:1;transform:translate(calc(-50% + var(--playerShift,0px)),-50%) rotateX(-49deg) scale(var(--depth))!important;
+ transition:transform .3s ease,filter .3s ease!important;filter:drop-shadow(0 10px 7px #0009);
+}
+#tableScreen .tableWrap .seat.pov1,#tableScreen .tableWrap .seat.pov5{--depth:1.12}
+#tableScreen .tableWrap .seat.pov2,#tableScreen .tableWrap .seat.pov4{--depth:1.02}
+#tableScreen .tableWrap .seat.pov3{--depth:.93}
+#tableScreen .seat:not(.pov0) .seatBody{perspective:550px;transform-style:preserve-3d!important}
+#tableScreen .seat:not(.pov0) .toon-torso{transform-style:preserve-3d!important;filter:drop-shadow(3px 5px 2px #0009)}
+#tableScreen .seat:not(.pov0) .toon-head{transform-style:preserve-3d!important;filter:drop-shadow(3px 4px 2px #0008)}
+#tableScreen .seat:not(.pov0) .seatBody:before{content:"";position:absolute;z-index:-1;left:19%;top:25%;width:65%;height:75%;border-radius:35% 35% 18% 18%;background:linear-gradient(90deg,#08070d,#483342 24%,#2b1d2c 72%,#0b090e);transform:translate3d(8px,5px,-24px) rotateY(-15deg);box-shadow:9px 10px 12px #0009;pointer-events:none}
+#tableScreen .tableWrap .seat.pov0 .seatCards{display:none!important}
+#tableScreen .tableWrap .seat:not(.pov0) .seatCards{transform:translateZ(12px) rotate(7deg)}
+#tableScreen .seat.cameraFocus .seatBody{filter:brightness(1.18)}
+#tableScreen .dealerStrip{transform:translateX(calc(-50% + var(--dealerShift,0px)));transition:transform .3s}
+#tableScreen .myHoleHUD{position:absolute;bottom:1%;left:50%;transform:translateX(-50%);z-index:25;display:flex;flex-direction:column;align-items:center;gap:5px;pointer-events:none}
+#tableScreen .myHoleHUD .myHoleCards{display:flex;gap:6px;filter:drop-shadow(0 4px 5px #000b)}
+#tableScreen .myHoleHUD .pcard{width:clamp(43px,8vw,64px);height:clamp(61px,11vw,90px);font-size:19px}
+#tableScreen .myHoleHUD .pcard b{font-size:28px}
+#tableScreen .myHoleHUD .myHoleCaption{font-size:10px;letter-spacing:.12em;background:#140c11e8;border:1px solid #c99b62;border-radius:5px;padding:3px 9px;color:#ffe2a6}
+#tableScreen .myHoleHUD:not(.revealed) .myHoleCards{display:none}
+#tableScreen .myHoleHUD:not(.revealed){bottom:2%}
+#tableScreen .myHoleHUD .myHoleCards .pcard.back{display:flex}
+#tableScreen .cardPeekControls{display:flex;justify-content:center;margin:8px 0;gap:9px}
+#tableScreen .cardPeekControls button{border:2px solid #b98a4e;border-radius:7px;background:#4c2a22;color:#ffdfab;padding:11px 20px;font-weight:900;min-height:46px}
+#tableScreen .cardPeekControls button:active{background:#83502d}
+@media(max-width:600px){#tableScreen .myHoleHUD{bottom:0}#tableScreen .myHoleHUD .pcard{width:43px;height:61px}#tableScreen .myHoleHUD .pcard b{font-size:24px}}
+</style>
+<script id="camera-3d-controller-v0415">
+(function(){
+ const scene=document.getElementById('tableScene');const table=scene?.querySelector('.tableWrap');if(!scene||!table)return;
+ // Existing camera controller still owns yaw; use it only as an input, never rotate felt.
+ let last='';
+ function refresh(){
+  const raw=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;
+  const yaw=Math.max(-48,Math.min(48,-raw));
+  const str=String(yaw);
+  if(str===last)return;last=str;
+  scene.style.setProperty('--look',str);scene.style.setProperty('--playerShift',(-yaw*2.3)+'px');scene.style.setProperty('--dealerShift',(-yaw*.6)+'px');scene.style.setProperty('--wallShift',(-yaw*.9)+'px');
+  const focus=yaw < -18?'pov1':yaw>18?'pov5':null;
+  table.querySelectorAll('.seat').forEach(el=>el.classList.toggle('cameraFocus',!!focus&&el.classList.contains(focus)));
+ }
+ new MutationObserver(refresh).observe(table,{attributes:true,attributeFilter:['style']});
+ const seats=document.getElementById('seats');if(seats)new MutationObserver(()=>{last='';refresh()}).observe(seats,{childList:true});
+ refresh();
+ // Personal hole cards are drawn exclusively from the current player's own view.
+ const hud=document.createElement('div');hud.className='myHoleHUD revealed';hud.setAttribute('aria-label','Your private poker cards');
+ hud.innerHTML='<div class="myHoleCaption">YOUR CARDS</div><div class="myHoleCards"></div>';scene.append(hud);
+ const controls=document.createElement('div');controls.className='cardPeekControls';
+ const btn=document.createElement('button');btn.type='button';btn.textContent='🂠 HIDE MY CARDS';btn.setAttribute('aria-pressed','true');controls.append(btn);
+ const pov=document.querySelector('#tableScreen .povControls');(pov||scene).insertAdjacentElement('afterend',controls);
+ let revealed=true;
+ function setReveal(v){revealed=v;hud.classList.toggle('revealed',v);btn.textContent=v?'🂠 HIDE MY CARDS':'🃏 VIEW MY CARDS';btn.setAttribute('aria-pressed',String(v));}
+ btn.addEventListener('click',()=>setReveal(!revealed));
+ const prior=renderView;
+ renderView=function(v){prior(v);const me=v?.players?.find(p=>p.seat===mySeat);const target=hud.querySelector('.myHoleCards');target.replaceChildren();
+  if(me?.hole?.length){target.append(cardsHtml(me.hole));hud.style.display='flex';btn.disabled=false;}
+  else {hud.style.display='none';btn.disabled=true;}
+ };
+ if(typeof view!=='undefined'&&view)renderView(view);
 })();
 </script>
 </body></html>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.43 3D Poker Room</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.46 3D Poker Room</title>
 <style>:root{--red:#b82626;--wine:#4b111a;--gold:#efb25a;--cream:#ffe6bc;--ink:#100b0e;--felt:#125940;--mint:#80e6a2;--gray:#b7afa8}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;}body{background:radial-gradient(at 40% -25%,#654035 0%,#1c1015 45%,#09080b 100%);color:var(--cream);font:600 16px/1.35 system-ui,Arial,sans-serif;overflow-x:hidden}button,input{font:inherit}button{touch-action:manipulation;cursor:pointer}button:disabled{opacity:.39;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid #ffdf91;outline-offset:2px}[hidden]{display:none!important}.screen{display:none;min-height:100vh;min-height:100dvh}.screen.active{display:block}h1,h2,h3,p{margin-top:0}.display{font-family:Impact,'Arial Black',system-ui,sans-serif;letter-spacing:.045em;line-height:1;transform:skew(-3deg)}.goldText{color:var(--gold)}.redText{color:#ed3d34}.muted{color:#bcada5;font-size:13px}.btn{border:2px solid #090709;border-bottom-width:5px;border-radius:5px;background:#ad2825;color:#fff2dc;text-shadow:1px 2px #42101d;box-shadow:0 5px 0 #10080a;font-family:Impact,'Arial Black',sans-serif;font-size:clamp(15px,2.5vw,20px);padding:12px 16px;letter-spacing:.055em;min-height:49px;transition:filter .13s,transform .13s}.btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 2px 0 #10080a}.btn:hover:not(:disabled){filter:brightness(1.2)}.btn.gold{background:#cb8839;color:#190d0c;text-shadow:none}.btn.green{background:#258266}.btn.outline{background:#251b20;border-color:#78543f}.btn.sm{font-size:13px;padding:8px 11px;min-height:38px}.panel{background:linear-gradient(155deg,#25161b,#130e12);border:3px solid #070707;outline:1px solid #865037;box-shadow:0 13px 40px #0009}
 #menuScreen{display:none;place-items:center;padding:clamp(9px,3vw,30px)}#menuScreen.active{display:grid}.menuShell{width:min(1150px,100%);min-height:min(86vh,780px);display:grid;grid-template-columns:1.1fr .9fr;overflow:hidden}.menuArt{position:relative;background:linear-gradient(0deg,#160a10b8 0%,transparent 40%),linear-gradient(90deg,transparent 75%,#1a0e16 100%),var(--cover) 50% 50%/cover;min-height:560px}.menuArt:after{content:'';position:absolute;inset:auto 0 0;height:43px;background:repeating-linear-gradient(110deg,transparent 0 32px,#d926253a 32px 44px)}.menuRight{display:flex;flex-direction:column;gap:15px;justify-content:center;padding:clamp(16px,4.5vw,62px);background:radial-gradient(at 0% 45%,#6d2225 0%,#251216 56%,#100c10 100%);text-align:center}.menuTitle{font-size:clamp(44px,6vw,84px);color:#ffe2aa;text-shadow:4px 6px 0 #180a10,7px 9px 0 #a21722;margin:0;line-height:.95}.menuTitle em{color:#d92b29;font-style:normal}.eyebrow{color:var(--gold);letter-spacing:.28em;font-size:12px;font-weight:900}.menuHint{font-size:13px;color:#c0a49b;margin:-2px 0}.menuActions{display:grid;gap:9px;margin-top:10px}.menuActions .btn{font-size:21px;min-height:52px}.debtPlate{background:#09090d;border:3px solid #9a2524;box-shadow:0 3px 0 #000;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:13px}.debtPlate b{font-family:Impact,'Arial Black',sans-serif;color:#ee372d;font-size:30px}.version{font-size:11px;color:#ad9b91}
@@ -1802,7 +1802,8 @@ function labelTexture(name){return makeTexture('LABEL:'+name,(p,w,h)=>{p.fillSty
 // Seats sit beyond the padded rail; the felt has separate card and chip lanes.
 const seatPositions={1:[3.92,1.46],2:[4.02,-1.08],3:[0,-3.56],4:[-4.02,-1.08],5:[-3.92,1.46]};
 const cardPositions={1:[2.18,1.28],2:[2.32,-1.02],3:[0,-1.78],4:[-2.32,-1.02],5:[-2.18,1.28]};
-const chipPositions={1:[2.92,.58],2:[2.96,-.38],3:[1.18,-1.74],4:[-2.96,-.38],5:[-2.92,.58],0:[-1.88,1.62]};
+// Chip trays are separated from the player card lanes and the table rail.
+const chipPositions={1:[2.75,.52],2:[2.68,-.34],3:[1.27,-1.55],4:[-2.68,-.34],5:[-2.75,.52],0:[-1.82,1.57]};
 const avatarColors=['#463246','#4d3440','#344356','#543b2b','#3d334f','#354a3e'];
 const actorVoiceState={seat:null,started:0,ends:0,lastBeat:0,character:''};
 window.addEventListener('lita:character-voice',e=>{
@@ -1826,7 +1827,7 @@ function isActorSpeaking(seat,dealer){
  return Number(node?.dataset.seat)===actorVoiceState.seat;
 }
 
-let yaw=0,drag=null,frames=0,boardPrev='',dealStart=0,handPrev='',lastRendered=0;
+let yaw=0,renderYaw=0,drag=null,frames=0,boardPrev='',dealStart=0,handPrev='',lastRendered=0;
 // Independent, short-lived 3D performance states. Only on-screen presentation changes;
 // network actions and poker rules stay untouched.
 const characterReactionState=new Map();
@@ -1857,11 +1858,11 @@ function chips(x,z,amount){
  if(!amount)return;
  const palette=['#e3decf','#b72b3d','#2f6395','#2a805f','#222735','#c49a44'];
  const bands=['#b8a681','#e6bfad','#d6e5ea','#dae1c1','#c2a67c','#f6dea7'];
- const count=Math.max(1,Math.min(4,Math.ceil(amount/650)));
+ const count=Math.max(1,Math.min(3,Math.ceil(amount/900)));
  for(let stack=0;stack<count;stack++){
-  const col=stack%2,row=Math.floor(stack/2),sx=x+(col-.5)*.32,sz=z+row*.30;
+  const col=stack%2,row=Math.floor(stack/2),sx=x+(col-.5)*.28,sz=z+row*.25;
   const tier=Math.min(5,Math.floor(Math.log10(Math.max(1,amount/count))/1.1));
-  const n=Math.min(7,Math.max(2,Math.ceil(amount/(count*140))+(stack%2)));
+  const n=Math.min(6,Math.max(2,Math.ceil(amount/(count*175))+(stack%2)));
   const base=palette[tier],edge=bands[tier];
   obj('cylinder',sx,1.102,sz,.205,.012,.205,'#182a24');
   for(let j=0;j<n;j++){
@@ -1869,7 +1870,7 @@ function chips(x,z,amount){
    obj('cylinder',sx,cy,sz,.185,.032,.185,base);
    obj('cylinder',sx,cy+.015,sz,.154,.006,.154,edge);
    // Four edge spots are readable from any seat and resemble striped casino chips.
-   if(j===0||j===n-1||j%2===0)for(let k=0;k<4;k++){
+   if(j===0||j===n-1)for(let k=0;k<4;k++){
     const a=k*Math.PI/2+stack*.19;
     obj('box',sx+Math.cos(a)*.082,cy,sz+Math.sin(a)*.082,.027,.018,.027,'#f5e9d4',a);
    }
@@ -1980,16 +1981,16 @@ function avatar(i,x,z,name,t,dealer=false){
    else if(reaction.type==='raise'){rise=.06*react; reach=.12*react;}
    else if(reaction.type==='call'){reach=.05*react;}
    const shoulder=[side*.42*w,shoulderY,.04];
-   const elbow=[side*.58*w,1.47+by+rise*.35,.18];
-   const wrist=[side*.69*w,1.20+by+rise,.32+reach];
+   const elbow=[side*.57*w,1.48+by+rise*.35,.16];
+   const wrist=[side*.66*w,1.23+by+rise,.29+reach];
    const palm=[wrist[0],wrist[1]-.07,wrist[2]+.06];
-   part('sphere',shoulder[0],shoulder[1],shoulder[2],.14,.14,.14,st.coat);
+   part('sphere',shoulder[0],shoulder[1],shoulder[2],.19,.20,.18,st.coat);
    limb(shoulder,elbow,.095*w,st.coat);
-   part('sphere',elbow[0],elbow[1],elbow[2],.10,.10,.10,st.coat);
+   part('sphere',elbow[0],elbow[1],elbow[2],.13,.14,.13,st.coat);
    limb(elbow,wrist,.080*w,st.coat);
-   part('sphere',wrist[0],wrist[1],wrist[2],.09,.07,.09,st.shirt);
+   part('sphere',wrist[0],wrist[1],wrist[2],.12,.10,.12,st.shirt);
    limb(wrist,palm,.055,st.skin);
-   part('sphere',palm[0],palm[1],palm[2],.13,.09,.11,st.skin);
+   part('sphere',palm[0],palm[1],palm[2],.15,.11,.14,st.skin);
    for(let finger=0;finger<3;finger++)part('sphere',palm[0]+side*(finger-1)*.045,palm[1]-.04,palm[2]+.07,.025,.045,.025,st.skin);
    part('sphere',palm[0]-side*.055,palm[1]-.01,palm[2]+.02,.030,.040,.024,st.skin); // thumb
  }
@@ -2024,8 +2025,50 @@ function table(){
  }
  for(const x of [-2.18,2.18])for(const z of [-1.05,1.05])obj('cylinder',x,.35,z,.32,.7,.32,'#32221e');
 }
-function card(x,z,c,face=true,rotation=0,scaleFactor=1){obj('plane',x,1.086,z,.39*scaleFactor,1,.56*scaleFactor,'#ffffff',rotation,cardTexture(c?.rank,c?.suit,!face));}
-function drawCards(seatData,shown,t){const hand=host.querySelector('.roundInfo')?.textContent||'';const key=hand.split('·')[0]||'';if(key!==handPrev){handPrev=key;dealStart=t;}for(let i=1;i<=5;i++){if(!seatData[i].active)continue;const [x,z]=cardPositions[i];for(let j=0;j<2;j++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*135-j*850)/360));if(wait<=0)continue;const start=[0,-1.48],spread=i===3?.52:.46,xx=start[0]+(x+(j-.5)*spread-start[0])*wait,zz=start[1]+(z-(j===0?.05:-.05)-start[1])*wait;card(xx,zz,null,false,0,.93);}}const peek=host.querySelector('.myHoleHUD')?.classList.contains('revealed');const own=hole();for(let i=0;i<2;i++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*850)/360));if(wait<=0)continue;card((i-.5)*.50,1.44,own[i],!!(peek&&own[i]),0,1.04);}for(let i=0;i<shown.length;i++){const cx=(i-2)*.56;obj('plane',cx,1.084,-.18,.48,1,.68,'#172b20');card(cx,-.18,shown[i],true,0,1.19);}}
+function card(x,z,c,face=true,rotation=0,scaleFactor=1){obj('plane',x,1.117,z,.39*scaleFactor,1,.56*scaleFactor,'#ffffff',rotation,cardTexture(c?.rank,c?.suit,!face));}
+function drawCards(seatData,shown,t){
+ // The status banner is outside the table scene. Use it as a single reliable
+ // hand identity so the two rounds of dealing replay for EVERY new hand.
+ const banner=document.getElementById('roundInfo')?.textContent||'';
+ const handMatch=banner.match(/HAND\s+(\d+)/i);
+ const currentHand=handMatch?handMatch[1]:banner.split('·')[0].trim();
+ if(currentHand!==handPrev){handPrev=currentHand;dealStart=t;}
+ const elapsed=t-dealStart;
+ const start=[0,-1.75];
+ // Always render two private cards for each occupied opponent. Their faces
+ // never become public, including in online play and at showdown.
+ for(let i=1;i<=5;i++){
+  if(!seatData[i].active)continue;
+  const [x,z]=cardPositions[i];
+  for(let j=0;j<2;j++){
+   const delay=300+i*145+j*950;
+   const progress=Math.max(0,Math.min(1,(elapsed-delay)/390));
+   if(progress<=0)continue;
+   const eased=1-Math.pow(1-progress,3);
+   const spread=i===3?.54:.51;
+   const toX=x+(j-.5)*spread,toZ=z+(j===0?-.06:.06);
+   const px=start[0]+(toX-start[0])*eased;
+   const pz=start[1]+(toZ-start[1])*eased;
+   card(px,pz,null,false,0,.94);
+  }
+ }
+ const peek=host.querySelector('.myHoleHUD')?.classList.contains('revealed');
+ const own=hole();
+ for(let i=0;i<2;i++){
+  const progress=Math.max(0,Math.min(1,(elapsed-250-i*950)/390));
+  if(progress<=0)continue;
+  const eased=1-Math.pow(1-progress,3);
+  const destX=(i-.5)*.52,destZ=1.53;
+  card(destX*eased, -1.75+(destZ+1.75)*eased,own[i],!!(peek&&own[i]),0,1.06);
+ }
+ // Flop / turn / river always sit above the felt. Shadow decal is lower
+ // than the face, avoiding z-fighting with the table on iPhone GPUs.
+ for(let i=0;i<shown.length;i++){
+  const cx=(i-2)*.57;
+  obj('plane',cx,1.095,-.18,.49,1,.70,'#172b20');
+  card(cx,-.18,shown[i],true,0,1.20);
+ }
+}
 function hands(t){
  // Rounded wrist/cuff/palm articulation follows the table rail, never the chip piles.
  const skin='#c59072',highlight='#ddb08f',sleeve='#352839';
@@ -2062,8 +2105,8 @@ function monitor(shown){
  const label=m.querySelector('.dealerMonitorStatus');
  if(label)label.textContent=shown.length===0?'WAITING FOR FLOP':shown.length===3?'FLOP · 3 CARDS':shown.length===4?'TURN · 4 CARDS':shown.length===5?'RIVER · 5 CARDS':'DEALING';
 }
-function size(){const rect=host.getBoundingClientRect();const ratio=Math.min(window.devicePixelRatio||1,window.innerWidth<700?1:1.3),w=Math.max(2,Math.round(rect.width*ratio)),h=Math.max(2,Math.round(rect.height*ratio));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}gl.uniformMatrix4fv(U.projection,false,perspective((window.innerWidth<700?68:60)*Math.PI/180,w/h,.08,40));}
-function frame(t){requestAnimationFrame(frame);if(!screen.classList.contains('active')||host.classList.contains('poker3d-fallback'))return;if(t-lastRendered<50)return;lastRendered=t;try{size();gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(U.view,false,lookAt([Math.sin(yaw)*.20,2.10,4.05],[Math.sin(yaw)*2.90,1.48,-.28]));const data=seats(),shown=board();room(t);table();for(let i of [3,2,4,1,5])if(data[i].active){const [x,z]=seatPositions[i];avatar(i,x,z,data[i].name,t);}avatar(7,0,-3.65,'VINNY',t,true);for(let i=1;i<=5;i++)if(data[i].active){const [x,z]=chipPositions[i];chips(x,z,data[i].stack);}chips(chipPositions[0][0],chipPositions[0][1],data[0].stack);drawCards(data,shown,t);hands(t);monitor(shown);updatePublicBoard(shown);if(frames++===2){status.textContent='3D POKER ROOM · READY';status.style.opacity='0';}if(gl.isContextLost())throw Error('WebGL context lost');}catch(e){console.error('[Poker 3D] Render error',e);recover(e.message||String(e));}}
+function size(){const rect=host.getBoundingClientRect();const ratio=Math.min(window.devicePixelRatio||1,window.innerWidth<700?1:1.3),w=Math.max(2,Math.round(rect.width*ratio)),h=Math.max(2,Math.round(rect.height*ratio));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}gl.uniformMatrix4fv(U.projection,false,perspective((window.innerWidth<700?72:62)*Math.PI/180,w/h,.08,40));}
+function frame(t){requestAnimationFrame(frame);if(!screen.classList.contains('active')||host.classList.contains('poker3d-fallback'))return;if(t-lastRendered<40)return;lastRendered=t;renderYaw+=(yaw-renderYaw)*.16;try{size();gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(U.view,false,lookAt([0,2.12,4.28],[Math.sin(renderYaw)*3.12,1.47,-.45+Math.abs(renderYaw)*.36]));const data=seats(),shown=board();room(t);table();for(let i of [3,2,4,1,5])if(data[i].active){const [x,z]=seatPositions[i];avatar(i,x,z,data[i].name,t);}avatar(7,0,-3.65,'VINNY',t,true);for(let i=1;i<=5;i++)if(data[i].active){const [x,z]=chipPositions[i];chips(x,z,data[i].stack);}chips(chipPositions[0][0],chipPositions[0][1],data[0].stack);drawCards(data,shown,t);hands(t);monitor(shown);updatePublicBoard(shown);if(frames++===2){status.textContent='3D POKER ROOM · READY';status.style.opacity='0';}if(gl.isContextLost())throw Error('WebGL context lost');}catch(e){console.error('[Poker 3D] Render error',e);recover(e.message||String(e));}}
 const publicBoardHUD=document.createElement('section');
  publicBoardHUD.id='poker3dPublicBoard';publicBoardHUD.setAttribute('aria-label','Community cards visible from every camera angle');
  publicBoardHUD.innerHTML='<div class="publicBoardTitle">COMMUNITY CARDS</div><div class="publicBoardCards"></div>';
@@ -2233,3 +2276,5 @@ window.addEventListener('resize',size,{passive:true});gl.enableVertexAttribArray
 #tableScreen #poker3dStatus{font-family:system-ui,sans-serif;letter-spacing:.04em}
 @media(max-width:600px){#tableScreen .tableScene{min-height:510px!important}}
 </style>
+
+<!-- Stability and visuals patch: v0.4.46 — hand deal synchronization, card depth, camera easing, chip lanes, joined limbs. -->

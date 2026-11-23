@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.38 3D Poker Room</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.43 3D Poker Room</title>
 <style>:root{--red:#b82626;--wine:#4b111a;--gold:#efb25a;--cream:#ffe6bc;--ink:#100b0e;--felt:#125940;--mint:#80e6a2;--gray:#b7afa8}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;}body{background:radial-gradient(at 40% -25%,#654035 0%,#1c1015 45%,#09080b 100%);color:var(--cream);font:600 16px/1.35 system-ui,Arial,sans-serif;overflow-x:hidden}button,input{font:inherit}button{touch-action:manipulation;cursor:pointer}button:disabled{opacity:.39;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid #ffdf91;outline-offset:2px}[hidden]{display:none!important}.screen{display:none;min-height:100vh;min-height:100dvh}.screen.active{display:block}h1,h2,h3,p{margin-top:0}.display{font-family:Impact,'Arial Black',system-ui,sans-serif;letter-spacing:.045em;line-height:1;transform:skew(-3deg)}.goldText{color:var(--gold)}.redText{color:#ed3d34}.muted{color:#bcada5;font-size:13px}.btn{border:2px solid #090709;border-bottom-width:5px;border-radius:5px;background:#ad2825;color:#fff2dc;text-shadow:1px 2px #42101d;box-shadow:0 5px 0 #10080a;font-family:Impact,'Arial Black',sans-serif;font-size:clamp(15px,2.5vw,20px);padding:12px 16px;letter-spacing:.055em;min-height:49px;transition:filter .13s,transform .13s}.btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 2px 0 #10080a}.btn:hover:not(:disabled){filter:brightness(1.2)}.btn.gold{background:#cb8839;color:#190d0c;text-shadow:none}.btn.green{background:#258266}.btn.outline{background:#251b20;border-color:#78543f}.btn.sm{font-size:13px;padding:8px 11px;min-height:38px}.panel{background:linear-gradient(155deg,#25161b,#130e12);border:3px solid #070707;outline:1px solid #865037;box-shadow:0 13px 40px #0009}
 #menuScreen{display:none;place-items:center;padding:clamp(9px,3vw,30px)}#menuScreen.active{display:grid}.menuShell{width:min(1150px,100%);min-height:min(86vh,780px);display:grid;grid-template-columns:1.1fr .9fr;overflow:hidden}.menuArt{position:relative;background:linear-gradient(0deg,#160a10b8 0%,transparent 40%),linear-gradient(90deg,transparent 75%,#1a0e16 100%),var(--cover) 50% 50%/cover;min-height:560px}.menuArt:after{content:'';position:absolute;inset:auto 0 0;height:43px;background:repeating-linear-gradient(110deg,transparent 0 32px,#d926253a 32px 44px)}.menuRight{display:flex;flex-direction:column;gap:15px;justify-content:center;padding:clamp(16px,4.5vw,62px);background:radial-gradient(at 0% 45%,#6d2225 0%,#251216 56%,#100c10 100%);text-align:center}.menuTitle{font-size:clamp(44px,6vw,84px);color:#ffe2aa;text-shadow:4px 6px 0 #180a10,7px 9px 0 #a21722;margin:0;line-height:.95}.menuTitle em{color:#d92b29;font-style:normal}.eyebrow{color:var(--gold);letter-spacing:.28em;font-size:12px;font-weight:900}.menuHint{font-size:13px;color:#c0a49b;margin:-2px 0}.menuActions{display:grid;gap:9px;margin-top:10px}.menuActions .btn{font-size:21px;min-height:52px}.debtPlate{background:#09090d;border:3px solid #9a2524;box-shadow:0 3px 0 #000;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:13px}.debtPlate b{font-family:Impact,'Arial Black',sans-serif;color:#ee372d;font-size:30px}.version{font-size:11px;color:#ad9b91}
@@ -1765,7 +1765,7 @@ if(!gl){recover('WebGL not supported');return;}
 try{
 const vs=`attribute vec3 aPosition;attribute vec3 aNormal;attribute vec2 aUV;
 uniform mat4 uProjection,uView,uModel;varying vec2 vUV;varying float vLight;varying float vDistance;
-void main(){vec4 world=uModel*vec4(aPosition,1.0);vec3 n=normalize(mat3(uModel)*aNormal);vLight=0.45+0.48*max(0.0,dot(n,normalize(vec3(-0.45,0.90,0.32))))+0.13*max(0.0,dot(n,normalize(vec3(0.65,0.26,-0.55))));vUV=aUV;vDistance=length((uView*world).xyz);gl_Position=uProjection*uView*world;}`;
+void main(){vec4 world=uModel*vec4(aPosition,1.0);vec3 n=normalize(mat3(uModel)*aNormal);vLight=0.39+0.49*max(0.0,dot(n,normalize(vec3(-0.48,0.94,0.42))))+0.18*max(0.0,dot(n,normalize(vec3(0.72,0.32,-0.48))));vUV=aUV;vDistance=length((uView*world).xyz);gl_Position=uProjection*uView*world;}`;
 const fs=`precision mediump float;uniform vec4 uColor;uniform sampler2D uSampler;uniform float uTextured;varying vec2 vUV;varying float vLight;varying float vDistance;
 void main(){vec4 col=uColor;if(uTextured>0.5)col*=texture2D(uSampler,vUV);if(col.a<0.04)discard;col.rgb*=vLight;float fog=clamp((vDistance-10.0)/18.0,0.0,0.5);col.rgb=mix(col.rgb,vec3(.085,.055,.075),fog);gl_FragColor=col;}`;
 function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
@@ -1892,9 +1892,16 @@ function avatar(i,x,z,name,t,dealer=false){
  function limbLocal(a,b,r,col){const A=wp(a[0],a[1],a[2]),B=wp(b[0],b[1],b[2]);line(A,B,r,col);}
 
  // chair
- part('box',0,.95,-.50,.86,1.16,.22,'#39282c');
- part('sphere',0,.60,-.27,.78,.19,.67,'#2d2329');
- for(const side of [-1,1]){part('cylinder',side*.39,.44,-.28,.10,.66,.10,'#3e2d29');part('cylinder',side*.39,.44,.08,.10,.66,.10,'#3e2d29');}
+ part('sphere',0,.96,-.52,.91,1.12,.27,'#231b24');
+ part('sphere',0,1.02,-.37,.79,.99,.18,'#50333b');
+ part('sphere',0,.66,-.25,.85,.23,.69,'#35242c');
+ part('sphere',0,.69,-.08,.71,.13,.49,'#603e43');
+ for(const side of [-1,1]){
+  part('cylinder',side*.40,.40,-.32,.10,.57,.10,'#3a2927');
+  part('cylinder',side*.46,.40,.12,.10,.57,.10,'#3a2927');
+  part('sphere',side*.49,.95,-.12,.14,.10,.46,'#694331');
+  part('sphere',side*.49,1.02,-.13,.11,.06,.35,'#8b603f');
+ }
 
  // torso and hips - one connected main mass so pieces do not float apart
  part('sphere',0,1.14+by,.00,.58*s,.38*h,.44*s,st.coat);
@@ -1975,6 +1982,8 @@ function avatar(i,x,z,name,t,dealer=false){
 }
 function room(t){obj('plane',0,-.05,0,16,1,17,'#35251f');obj('box',0,2.2,-6.0,15,4.6,.2,'#35232a');obj('box',-7.0,2.2,0,.25,4.6,14,'#2c2028');obj('box',7.0,2.2,0,.25,4.6,14,'#2c2028');for(let i=-3;i<=3;i++){obj('box',i*1.75,2.0,-5.85,.11,3.7,.14,'#67412f');obj('box',i*1.75+.82,1.15,-5.82,1.40,.05,.14,'#9a6a41');}obj('box',0,3.95,-5.75,4.4,.65,.12,'#25131d');obj('wall',0,3.95,-5.64,3.4,.45,1,'#ffffff',0,labelTexture('I LOST IT ALL'));obj('cylinder',0,3.85,-.55,1.40,.22,1.40,'#7a543a');obj('cylinder',0,3.68,-.55,1.05,.06,1.05,'#e4b77d');obj('sphere',0,3.52,-.55,.38,.12,.38,'#ffe6a8');for(let x of [-5,5]){obj('box',x,1.25,-4.3,1.2,2.5,.25,'#5a3a2c');obj('sphere',x,2.35,-4.0,.28,.28,.15,'#e7bb7e');}}
 function table(){
+ // Soft felt drop shadow beneath edge; low-cost geometry rather than shadow maps.
+ obj('disc',0,.16,0,7.20,1,4.76,'#24181c');
  // One large top surface avoids z-fighting between gold trim and green felt on iOS GPUs.
  obj('cylinder',0,.54,0,7.05,.69,4.63,'#2b1b1c');
  obj('cylinder',0,.83,0,7.13,.16,4.69,'#a77b49');
@@ -1992,11 +2001,45 @@ function table(){
 }
 function card(x,z,c,face=true,rotation=0,scaleFactor=1){obj('plane',x,1.086,z,.39*scaleFactor,1,.56*scaleFactor,'#ffffff',rotation,cardTexture(c?.rank,c?.suit,!face));}
 function drawCards(seatData,shown,t){const hand=host.querySelector('.roundInfo')?.textContent||'';const key=hand.split('·')[0]||'';if(key!==handPrev){handPrev=key;dealStart=t;}for(let i=1;i<=5;i++){if(!seatData[i].active)continue;const [x,z]=cardPositions[i];for(let j=0;j<2;j++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*135-j*850)/360));if(wait<=0)continue;const start=[0,-1.48],spread=i===3?.52:.46,xx=start[0]+(x+(j-.5)*spread-start[0])*wait,zz=start[1]+(z-(j===0?.05:-.05)-start[1])*wait;card(xx,zz,null,false,0,.93);}}const peek=host.querySelector('.myHoleHUD')?.classList.contains('revealed');const own=hole();for(let i=0;i<2;i++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*850)/360));if(wait<=0)continue;card((i-.5)*.50,1.44,own[i],!!(peek&&own[i]),0,1.04);}for(let i=0;i<shown.length;i++){card((i-2)*.53,-.18,shown[i],true,0,1.14);}}
-function hands(t){const skin='#c59072',sleeve='#3a2735';for(let s of [-1,1]){const wrist=[s*.92,.92,2.04],elbow=[s*1.34,.70,2.96];line(elbow,wrist,.17,sleeve);line([s*.95,.92,2.04],[s*.80,1.01,1.82],.13,skin);obj('sphere',s*.77,1.02,1.79,.32,.12,.24,skin);for(let i=0;i<4;i++){const x=s*(.61+i*.082);line([x,1.02,1.72],[x-s*.04,1.04,1.50+(i%2)*.05],.037,skin);obj('sphere',x-s*.04,1.04,1.50+(i%2)*.05,.03,.03,.03,'#dba786');}line([s*.94,1.01,1.84],[s*1.07,1.03,1.69],.052,skin);obj('sphere',s*1.07,1.03,1.69,.04,.04,.04,'#dba786');}}
-function monitor(shown){const m=host.querySelector('#dealerMonitor3d');if(!m)return;const wrap=m.querySelector('.dealerMonitorCards');if(!wrap)return;const k=JSON.stringify(shown);if(wrap.dataset.key===k)return;wrap.dataset.key=k;wrap.replaceChildren();for(let i=0;i<5;i++){const e=document.createElement('span');e.className='dealerMiniCard '+(i>=shown.length?'pending':/[♥♦HD]/.test(shown[i].suit)?'red':'');e.textContent=i<shown.length?shown[i].rank+(suits[shown[i].suit]||shown[i].suit):'?';wrap.append(e);}const monitorCanvas=m.querySelector('canvas');if(monitorCanvas){monitorCanvas.width=300;monitorCanvas.height=125;const p=monitorCanvas.getContext('2d');p.fillStyle='#261719';p.fillRect(0,0,300,125);p.fillStyle='#875e3e';p.beginPath();p.ellipse(150,64,139,54,0,0,7);p.fill();p.fillStyle='#155c3d';p.beginPath();p.ellipse(150,64,132,48,0,0,7);p.fill();p.fillStyle='#ffe0a0';p.textAlign='center';p.font='bold 11px sans-serif';p.fillText('VINNY · TABLE CAMERA',150,22);for(let i=0;i<5;i++){const x=55+i*41;p.fillStyle='#d8cfb9';p.fillRect(x,46,32,43);if(i<shown.length){p.fillStyle='#fff3d9';p.fillRect(x+2,48,28,39);p.fillStyle=/[♥♦HD]/.test(shown[i].suit)?'#bd2837':'#171b24';p.font='bold 17px Georgia';p.fillText(shown[i].rank+(suits[shown[i].suit]||shown[i].suit),x+16,75);}}}}
+function hands(t){
+ // Rounded wrist/cuff/palm articulation follows the table rail, never the chip piles.
+ const skin='#c59072',highlight='#ddb08f',sleeve='#352839';
+ for(const side of [-1,1]){
+  const sway=Math.sin(t*.0008+side)*.008;
+  const shoulder=[side*1.48,.52,3.06], elbow=[side*1.20,.73,2.53];
+  const wrist=[side*.92,.96,2.06],palm=[side*.79,1.02,1.86+sway];
+  line(shoulder,elbow,.19,sleeve);obj('sphere',...elbow,.37,.32,.34,sleeve);
+  line(elbow,wrist,.165,sleeve);obj('sphere',...wrist,.28,.18,.27,'#f0dfc8');
+  line(wrist,palm,.12,skin);
+  obj('sphere',palm[0],palm[1],palm[2],.36,.16,.30,skin);
+  obj('sphere',palm[0],palm[1]+.045,palm[2]-.03,.29,.06,.22,highlight);
+  for(let finger=0;finger<4;finger++){
+   const xx=side*(.57+finger*.075),base=[xx,1.02,1.74+(finger===0||finger===3?.035:0)];
+   const tip=[xx-side*.014,1.036,1.51+(finger===0||finger===3?.06:0)+sway];
+   line(base,tip,.038,skin);
+   obj('sphere',tip[0],tip[1],tip[2],.075,.055,.075,skin);
+   obj('sphere',tip[0],tip[1]+.030,tip[2]-.016,.044,.010,.038,'#edc3a7');
+  }
+  line([side*.96,1.03,1.88],[side*1.06,1.035,1.70],.058,skin);
+  obj('sphere',side*1.06,1.035,1.70,.10,.075,.10,skin);
+ }
+}
+function monitor(shown){
+ const m=host.querySelector('#dealerMonitor3d');if(!m)return;
+ const wrap=m.querySelector('.dealerMonitorCards');if(!wrap)return;
+ const k=JSON.stringify(shown);if(wrap.dataset.key===k)return;
+ wrap.dataset.key=k;wrap.replaceChildren();
+ for(let i=0;i<5;i++){
+  const e=document.createElement('span');e.className='dealerMiniCard '+(i>=shown.length?'pending':/[♥♦HD]/.test(shown[i].suit)?'red':'');
+  e.textContent=i<shown.length?shown[i].rank+(suits[shown[i].suit]||shown[i].suit):'◆';
+  wrap.append(e);
+ }
+ const label=m.querySelector('.dealerMonitorStatus');
+ if(label)label.textContent=shown.length===0?'WAITING FOR FLOP':shown.length===3?'FLOP · 3 CARDS':shown.length===4?'TURN · 4 CARDS':shown.length===5?'RIVER · 5 CARDS':'DEALING';
+}
 function size(){const rect=host.getBoundingClientRect();const ratio=Math.min(window.devicePixelRatio||1,window.innerWidth<700?1:1.3),w=Math.max(2,Math.round(rect.width*ratio)),h=Math.max(2,Math.round(rect.height*ratio));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}gl.uniformMatrix4fv(U.projection,false,perspective((window.innerWidth<700?68:60)*Math.PI/180,w/h,.08,40));}
 function frame(t){requestAnimationFrame(frame);if(!screen.classList.contains('active')||host.classList.contains('poker3d-fallback'))return;if(t-lastRendered<50)return;lastRendered=t;try{size();gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(U.view,false,lookAt([Math.sin(yaw)*.32,2.05,3.68],[Math.sin(yaw)*4.1,1.42,-.72]));const data=seats(),shown=board();room(t);table();for(let i of [3,2,4,1,5])if(data[i].active){const [x,z]=seatPositions[i];avatar(i,x,z,data[i].name,t);}avatar(7,0,-3.65,'VINNY',t,true);for(let i=1;i<=5;i++)if(data[i].active){const [x,z]=chipPositions[i];chips(x,z,data[i].stack);}chips(chipPositions[0][0],chipPositions[0][1],data[0].stack);drawCards(data,shown,t);hands(t);monitor(shown);if(frames++===2){status.textContent='3D POKER ROOM · READY';status.style.opacity='0';}if(gl.isContextLost())throw Error('WebGL context lost');}catch(e){console.error('[Poker 3D] Render error',e);recover(e.message||String(e));}}
-const monitorNode=document.createElement('section');monitorNode.id='dealerMonitor3d';monitorNode.innerHTML='<div class="dealerMonitorTitle">● VINNY CAM <span>COMMUNITY CARDS</span></div><canvas aria-label="Dealer view of community cards"></canvas><div class="dealerMonitorCards"></div>';host.append(monitorNode);
+const monitorNode=document.createElement('section');monitorNode.id='dealerMonitor3d';monitorNode.innerHTML='<div class="dealerMonitorTitle"><span class="dealerLight">●</span> VINNY CAM <span>DEALER VIEW</span></div><div class="dealerMonitorStatus">WAITING FOR FLOP</div><div class="dealerMonitorCards"></div>';host.append(monitorNode);
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};try{canvas.setPointerCapture(e.pointerId);}catch(_){};});canvas.addEventListener('pointerup',e=>{if(!drag)return;const dx=e.clientX-drag.x;drag=null;yaw=Math.max(-.85,Math.min(.85,yaw+dx*.004));});
 const left=document.getElementById('povLeft'),right=document.getElementById('povRight'),center=document.getElementById('povCenter');left?.addEventListener('click',()=>yaw=Math.max(-.85,yaw-.28));right?.addEventListener('click',()=>yaw=Math.min(.85,yaw+.28));center?.addEventListener('click',()=>yaw=0);
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();recover('Graphics context lost');});
@@ -2103,6 +2146,29 @@ window.addEventListener('resize',size,{passive:true});gl.enableVertexAttribArray
  #tableScreen #dealerMonitor3d .dealerMiniCard{min-height:23px!important;font-size:10px!important}
  #tableScreen .tableScene>.myHoleHUD{bottom:4px!important}
 }
+</style>
+
+<style id="poker3d-polish-v0433">
+#tableScreen #dealerMonitor3d{top:9px!important;right:9px!important;width:clamp(160px,26%,216px)!important;background:linear-gradient(150deg,#251a22f5,#0f1017f5)!important;border:1px solid #bd965f!important;border-radius:12px!important;box-shadow:0 10px 28px #0009,inset 0 1px #ffe7b94d!important;z-index:23!important}
+#tableScreen #dealerMonitor3d .dealerMonitorTitle{background:#332129!important;color:#ffe1a3!important;display:flex!important;align-items:center;gap:5px;padding:8px!important;font-size:10px!important;letter-spacing:.05em!important;white-space:nowrap!important}
+#tableScreen #dealerMonitor3d .dealerMonitorTitle span:last-child{margin-left:auto;color:#c9a981;font-size:8px!important}
+#tableScreen #dealerMonitor3d .dealerLight{font-size:11px!important;color:#e7b76b;animation:pokerDealerLight 2.2s ease-in-out infinite}
+#tableScreen #dealerMonitor3d .dealerMonitorStatus{padding:8px 7px 2px;text-align:center;color:#b3d2ba;font:700 9px system-ui;letter-spacing:.13em}
+#tableScreen #dealerMonitor3d .dealerMonitorCards{display:flex!important;gap:4px!important;padding:7px!important;justify-content:center!important;background:transparent!important}
+#tableScreen #dealerMonitor3d .dealerMiniCard{width:19%!important;aspect-ratio:.72!important;min-height:0!important;background:#fff0d5!important;color:#242027!important;border:1px solid #dec79f!important;border-radius:4px!important;font:bold clamp(11px,1.6vw,15px) Georgia,serif!important;box-shadow:0 2px 5px #0008!important}
+#tableScreen #dealerMonitor3d .dealerMiniCard.red{color:#b3263c!important}
+#tableScreen #dealerMonitor3d .dealerMiniCard.pending{background:repeating-linear-gradient(45deg,#4f1830 0 5px,#742c42 5px 10px)!important;color:#d5ad75!important;border-color:#b89565!important}
+#tableScreen #dealerMonitor3d canvas{display:none!important}
+@keyframes pokerDealerLight{50%{opacity:.55}}
+@media(max-width:600px){
+ #tableScreen .tableScene #dealerMonitor3d{width:156px!important;top:6px!important;right:6px!important}
+ #tableScreen #dealerMonitor3d .dealerMonitorTitle{font-size:8px!important;padding:6px!important}
+ #tableScreen #dealerMonitor3d .dealerMonitorTitle span:last-child{font-size:7px!important}
+ #tableScreen #dealerMonitor3d .dealerMonitorStatus{font-size:8px;padding:6px 4px 0}
+ #tableScreen #dealerMonitor3d .dealerMonitorCards{padding:6px!important;gap:3px!important}
+ #tableScreen #dealerMonitor3d .dealerMiniCard{font-size:11px!important}
+}
+@media(prefers-reduced-motion:reduce){#tableScreen #dealerMonitor3d .dealerLight{animation:none}}
 </style>
 </body></html>
 <style id="poker3d-mobile-reliability-v0435">

@@ -1739,7 +1739,7 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
   for(const x of [-1.8,1.8])for(const z of [-.72,.72])mesh(new T.CylinderGeometry(.15,.18,.78,12),wood,x,.35,z);
   function chip(x,z,color='#ba3134'){const c=mesh(new T.CylinderGeometry(.12,.12,.06,20),mat(color,.4),x,1.04,z);return c;}
   for(let i=0;i<11;i++)chip((i%4-1.5)*.14,-.22+Math.floor(i/4)*.14,i%3?'#a42b35':'#dfc18b');
-  // v0.4.27: Readable, real card faces drawn onto the horizontal 3D table.
+  // v0.4.28: Readable, real card faces drawn onto the horizontal 3D table.
   const cardMaterial=new T.MeshStandardMaterial({color:'#f4e2c4',roughness:.65,side:T.DoubleSide});
   const cardBackTexture=(()=>{const c=document.createElement('canvas');c.width=256;c.height=360;const x=c.getContext('2d');x.fillStyle='#862b39';x.fillRect(0,0,256,360);x.strokeStyle='#f4d6a0';x.lineWidth=12;x.strokeRect(13,13,230,334);x.lineWidth=3;x.strokeRect(26,26,204,308);x.fillStyle='#eac68a';x.font='bold 76px Georgia';x.textAlign='center';x.fillText('♠',128,205);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t;})();
   const faceCache=new Map();
@@ -1770,7 +1770,7 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
     card.visible=false;shuffleCards.push(card);
   }
   let shuffleStart=-1,shuffleSoundAt=0,shuffleSoundEnabled=false,audioContext=null;
-  // v0.4.27: A facedown burn card goes to a separate discard pile before each street.
+  // v0.4.28: A facedown burn card goes to a separate discard pile before each street.
   const burnPile=[];let burnCount=0;
   function cardFoley(kind='slide'){
     if(!shuffleSoundEnabled)return;
@@ -1821,7 +1821,7 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
     if(active&&t-shuffleSoundAt>110){shuffleSoundAt=t;shuffleTickSound();}
   }
   const deckStack=mesh(new T.BoxGeometry(.34,.085,.50),dealBack,0,1.075,-1.05);
-  // v0.4.27: Two articulated dealer arms, hands and a physical deck grip.
+  // v0.4.28: Two articulated dealer arms, hands and a physical deck grip.
   const dealerRig=new T.Group();dealerRig.position.set(0,0,-2.83);world.add(dealerRig);
   const sleeveMat=mat('#302831'),cuffMat=mat('#f1dfc4'),fingerMat=mat('#b98569');
   const dealerArms=[];
@@ -1982,6 +1982,64 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
       ctx.font='bold 30px Arial';ctx.textAlign='center';ctx.fillStyle='#ffdf9c';ctx.fillText('$'+amount.toLocaleString(),128,43);label.texture.needsUpdate=true;
     }
   }
+  // v0.4.29: Animated, denomination-colored chip transfers tied to real balances.
+  const flyingChips=[], previousBalances=new Map();let previousPot=null,previousHandForChips=null;
+  const potChips=new T.Group();world.add(potChips);
+  const denominationColors=['#d8b66d','#283b58','#277654','#b73e43','#e4d7b9'];
+  function transferChips(from,to,amount,kind){
+    const count=Math.min(12,Math.max(2,Math.ceil(Math.log10(Math.max(2,amount))*2)));
+    for(let i=0;i<count;i++){
+      const material=chipMaterials[(i+Math.floor(amount/25))%chipMaterials.length];
+      const piece=mesh(new T.CylinderGeometry(.078,.078,.022,16),material,from.x,from.y+.04*i,from.z);
+      const start=from.clone(),end=to.clone();end.x+=(i%4-1.5)*.14;end.z+=(Math.floor(i/4)-1)*.12;
+      flyingChips.push({piece,start,end,age:-i*.075,duration:.65+i*.035,kind});
+    }
+    cardFoley('slide');
+  }
+  function seatChipPosition(relative){const a=Math.PI/2+relative*Math.PI/3;return new T.Vector3(Math.cos(a)*2.13,1.08,Math.sin(a)*1.19);}
+  function updateChipTransfers(){
+    const players=(typeof view!=='undefined'&&view?.players)||[];
+    const localSeat=typeof mySeat==='number'?mySeat:0;
+    const hand=Number(view?.handNo)||0,pot=Number(view?.pot)||0;
+    if(hand!==previousHandForChips){previousHandForChips=hand;previousBalances.clear();previousPot=pot;for(const p of players)previousBalances.set(p.seat,Number(p.stack)||0);return;}
+    const changes=[];
+    for(const p of players){const current=Number(p.stack)||0,old=previousBalances.get(p.seat);if(old!==undefined&&current!==old)changes.push({p,diff:current-old,relative:(p.seat-localSeat+6)%6});previousBalances.set(p.seat,current);}
+    const potPosition=new T.Vector3(0,1.10,-.23);
+    const potDelta=pot-(previousPot??pot);
+    if(potDelta>0){for(const change of changes.filter(c=>c.diff<0))transferChips(seatChipPosition(change.relative),potPosition,-change.diff,'bet');}
+    if(potDelta<0){for(const change of changes.filter(c=>c.diff>0))transferChips(potPosition,seatChipPosition(change.relative),change.diff,'win');}
+    previousPot=pot;
+  }
+  function animateFlyingChips(dt){
+    for(let i=flyingChips.length-1;i>=0;i--){const f=flyingChips[i];f.age+=dt;if(f.age<0)continue;
+      const k=Math.min(1,f.age/f.duration),smooth=k*k*(3-2*k);
+      f.piece.position.lerpVectors(f.start,f.end,smooth);f.piece.position.y+=Math.sin(Math.PI*k)*.38;
+      f.piece.rotation.set(Math.PI/2*Math.sin(Math.PI*k),k*Math.PI*2,0);
+      if(k>=1){world.remove(f.piece);f.piece.geometry.dispose();flyingChips.splice(i,1);}
+    }
+  }
+  // Richer felt: stitched oval betting line, rail inlays, cup holders and room props.
+  const stitch=mat('#d4b87b',.7),railLeather=mat('#271a1c',.52);
+  for(let i=0;i<96;i++){
+    const a=i*Math.PI*2/96,x=Math.cos(a)*2.49,z=Math.sin(a)*1.61;
+    const line=mesh(new T.BoxGeometry(.055,.008,.009),stitch,x,1.001,z);line.rotation.y=-a;
+  }
+  for(let i=0;i<6;i++){
+    const a=Math.PI/2+i*Math.PI/3,x=Math.cos(a)*2.76,z=Math.sin(a)*1.88;
+    const holder=mesh(new T.CylinderGeometry(.19,.19,.013,24),trim,x,1.002,z);
+    mesh(new T.CylinderGeometry(.148,.148,.015,24),dark,x,1.012,z);
+  }
+  for(let i=0;i<24;i++){
+    const a=i*Math.PI*2/24;
+    const inlay=mesh(new T.SphereGeometry(.035,8,6),gold,Math.cos(a)*2.84,.9,Math.sin(a)*1.91);
+    inlay.scale.y=.4;
+  }
+  for(const x of [-4.6,4.6]){
+    const sideTable=mesh(new T.CylinderGeometry(.48,.52,.09,20),wood,x,.75,-2.5);
+    mesh(new T.CylinderGeometry(.06,.09,.7,12),trim,x,.36,-2.5);
+    const glassCup=mesh(new T.CylinderGeometry(.11,.09,.23,16),new T.MeshStandardMaterial({color:'#8b6547',transparent:true,opacity:.7,roughness:.2}),x,.94,-2.5);
+    mesh(new T.CylinderGeometry(.085,.085,.012,16),mat('#a15c28'),x,1.057,-2.5);
+  }
   // Real modeled hands and forearms belong to the local camera only.
   const hands=new T.Group();camera.add(hands);world.add(camera);
   const sleeve=mat('#27202b'),cuff=mat('#e9d9be'),palm=mat('#bd8264');
@@ -2004,7 +2062,16 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
    const coat=mat(colors[n]);const torso=mesh(new T.CylinderGeometry(.34,.48,.9,14),coat,0,1.47,0,g);torso.rotation.x=-.07;
    mesh(new T.SphereGeometry(.28,18,12),skin,0,2.14,.04,g);
    const hat=mesh(new T.CylinderGeometry(.34,.36,.16,20),dark,0,2.45,.03,g);mesh(new T.CylinderGeometry(.48,.48,.035,24),dark,0,2.36,.03,g);
-   for(const x of [-.43,.43]){const arm=mesh(new T.CapsuleGeometry(.105,.47,5,9),coat,x,1.24,.29,g);arm.rotation.z=x>0?.55:-.55;mesh(new T.SphereGeometry(.12,10,8),skin,x*1.35,1.03,.48,g);}
+   const characterArms=[];
+   for(const side of [-1,1]){
+     const pivot=new T.Group();pivot.position.set(side*.40,1.79,.08);g.add(pivot);
+     const upper=mesh(new T.CapsuleGeometry(.105,.37,6,12),coat,side*.045,-.23,.16,pivot);upper.rotation.z=side*.22;upper.rotation.x=-.42;
+     const elbow=new T.Group();elbow.position.set(side*.11,-.49,.32);pivot.add(elbow);
+     const lower=mesh(new T.CapsuleGeometry(.080,.28,6,12),coat,0,-.12,.15,elbow);lower.rotation.x=-.68;
+     const palmMesh=mesh(new T.SphereGeometry(.108,14,10),skin,0,-.26,.32,elbow);palmMesh.scale.set(1,.62,1.35);
+     for(let f=0;f<4;f++){const finger=mesh(new T.CapsuleGeometry(.020,.075,4,7),skin,(f-1.5)*.042,-.29,.40,elbow);finger.rotation.x=-.85;}
+     characterArms.push({pivot,elbow,palm:palmMesh,side});
+   }
    mesh(new T.SphereGeometry(.035,8,6),dark,-.105,2.18,.286,g);mesh(new T.SphereGeometry(.035,8,6),dark,.105,2.18,.286,g);
    // Detailed 3D facial features, clothing, collars, hair and visible chair backs.
    const hair=mat(n%2?'#281b19':'#493024'),eyeWhite=mat('#f5e9d5'),iris=mat('#1c1717');
@@ -2023,7 +2090,7 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
 
    const label=document.createElement('canvas');label.width=256;label.height=64;const cx=label.getContext('2d');cx.fillStyle='#160d12';cx.fillRect(0,0,256,64);cx.strokeStyle='#e1ad68';cx.lineWidth=4;cx.strokeRect(2,2,252,60);cx.fillStyle='#ffe0a6';cx.font='bold 24px Arial';cx.textAlign='center';cx.fillText('SEAT '+(n+1),128,41);
    const tex=new T.CanvasTexture(label);const tag=new T.Sprite(new T.SpriteMaterial({map:tex,depthTest:false}));tag.scale.set(1.35,.34,1);tag.position.set(0,2.85,0);g.add(tag);
-   bodies.push({g,tag,canvas:label,ctx:cx,tex,n});
+   bodies.push({g,tag,canvas:label,ctx:cx,tex,n,characterArms,head:g.children.find(o=>o.geometry?.type==='SphereGeometry'&&o.position.y>2)});
   }
   for(let n=0;n<6;n++)character(n);
   // Dealer at the far end of the room, separate from the six player chairs.
@@ -2053,22 +2120,49 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
       out.append(card);
     }
   }
-  // Rigged upper-body animation: turns, reaching for chips, folding and celebrating.
-  const rigs=bodies.map(({g})=>({g,arms:[...g.children].filter(o=>o.geometry?.type==='CapsuleGeometry'&&o.position.y>1),head:g.children.find(o=>o.geometry?.type==='SphereGeometry'&&o.position.y>2)}));
-  const lastActions=new Map(),actionTimes=new Map();
+  // v0.4.29: articulated card peeks, chip stacking, bets, folds and reactions.
+  // Animations are visual only; no private card information is shared.
+  const lastActions=new Map(),actionTimes=new Map(),lastHandBySeat=new Map();
+  const playerCardProps=bodies.map((body,n)=>{
+    const group=new T.Group();body.g.add(group);
+    group.position.set(0,1.05,.94);
+    const left=mesh(new T.BoxGeometry(.21,.012,.30),dealBack,-.13,0,0,group);
+    const right=mesh(new T.BoxGeometry(.21,.012,.30),dealBack,.13,0,.015,group);
+    left.rotation.y=-.12;right.rotation.y=.12;
+    group.visible=false;
+    return {group,left,right};
+  });
   function animatePlayers(t){
     const seats=[...host.querySelectorAll('.seat')];
     for(const seat of seats){
       const match=seat.className.match(/pov([0-5])/);if(!match)continue;
-      const n=Number(match[1]),rig=rigs[n];if(!rig)continue;
+      const n=Number(match[1]),body=bodies[n];if(!body||n===0)continue;
       const action=(seat.querySelector('.lastMove')?.textContent||'').trim();
       if(action!==lastActions.get(n)){lastActions.set(n,action);actionTimes.set(n,t);}
-      const age=(t-(actionTimes.get(n)||0))/1000,phase=Math.max(0,1-age/1.1);
+      const age=(t-(actionTimes.get(n)||0))/1000;
+      const impulse=Math.sin(Math.PI*Math.min(1,age/.85))*Math.max(0,1-age/1.4);
       const fold=/fold/i.test(action),bet=/bet|raise|call|all.in/i.test(action),win=/win|won|collect/i.test(action),check=/check/i.test(action);
-      const impulse=Math.sin(Math.min(1,age/.55)*Math.PI)*phase;
-      rig.g.rotation.z=Math.sin(t*.0012+n)*.012+(win?impulse*.07:0);
-      if(rig.head)rig.head.rotation.y=Math.sin(t*.0008+n)*.12;
-      rig.arms.forEach((arm,i)=>{const side=i?1:-1;arm.rotation.x=(bet?-.8:fold?.6:check?-.32:win?-1.0:0)*impulse;arm.rotation.z=side*(.55+(win?-.35*impulse:0));});
+      const idle=Math.sin(t*.0015+n*1.9),peek=Math.max(0,Math.sin(t*.00055+n*1.2))**6;
+      body.g.rotation.z=idle*.012+(win?impulse*.10:0);
+      if(body.head){body.head.rotation.y=Math.sin(t*.0007+n)*.16;body.head.rotation.x=peek*.055;}
+      const props=playerCardProps[n];
+      props.group.visible=body.g.visible&&!fold;
+      props.group.rotation.x=-peek*.35;
+      props.group.position.y=1.045+peek*.14;
+      props.group.position.z=.94-peek*.09;
+      body.characterArms.forEach(({pivot,elbow,side},i)=>{
+        const alternating=Math.sin(t*.002+n+i*2)*.035;
+        // Idle: hands rest near chips and cards. Peeking: hands draw cards inward.
+        pivot.rotation.x=-.35-peek*.34+alternating;
+        pivot.rotation.z=side*(.25-peek*.10);
+        elbow.rotation.x=-.52-peek*.38;
+        if(bet){pivot.rotation.x-=impulse*.80;elbow.rotation.x+=impulse*.32;}
+        if(fold){pivot.rotation.x+=impulse*.40;elbow.rotation.x-=impulse*.50;}
+        if(check){pivot.rotation.x-=impulse*.23;}
+        if(win){pivot.rotation.x-=impulse*1.10;elbow.rotation.x+=impulse*.55;pivot.rotation.z-=side*impulse*.20;}
+        // Alternating hand motions simulate arranging the stacks between actions.
+        if(!bet&&!fold&&!win&&peek<.1){elbow.rotation.x+=Math.max(0,Math.sin(t*.0012+n*2+i*3))*.12;}
+      });
     }
   }
   function resize(){const w=host.clientWidth,h=host.clientHeight;if(w<1||h<1)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<600?69:60;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(host);resize();
@@ -2086,10 +2180,10 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
      for(let i=observedBoard;i<shown.length;i++)launchDeal((i-2)*.40,.32,.65+(i-observedBoard)*.22,true,i);
      observedBoard=shown.length;
    }
-   syncBoardFaces();syncChipStacks();
+   syncBoardFaces();syncChipStacks();updateChipTransfers();
    board.forEach((b,i)=>{b.visible=i<shown.length&&!dealing.some(d=>d.boardIndex===i);});
   }
-  let frames=0,lastFrame=0;function animate(t){requestAnimationFrame(animate);const dt=Math.min(.05,(t-lastFrame)/1000||0);lastFrame=t;if(!document.getElementById('tableScreen').classList.contains('active'))return;update();bodies.forEach((b,i)=>{b.g.position.y=Math.sin(t*.0016+i)*.018;});animatePlayers(t);animateShuffle(t);animateDeals(dt,t);updateDealerCards();renderer.render(world,camera);if(dealerRenderer){sizeDealer();dealerRenderer.render(world,dealerCamera);}if(frames++===2)status.textContent='3D ROOM · EYE-LEVEL VIEW · DRAG TO LOOK AROUND';}requestAnimationFrame(animate);
+  let frames=0,lastFrame=0;function animate(t){requestAnimationFrame(animate);const dt=Math.min(.05,(t-lastFrame)/1000||0);lastFrame=t;if(!document.getElementById('tableScreen').classList.contains('active'))return;update();bodies.forEach((b,i)=>{b.g.position.y=Math.sin(t*.0016+i)*.018;});animatePlayers(t);animateShuffle(t);animateDeals(dt,t);animateFlyingChips(dt);updateDealerCards();renderer.render(world,camera);if(dealerRenderer){sizeDealer();dealerRenderer.render(world,dealerCamera);}if(frames++===2)status.textContent='3D ROOM · ANIMATED PLAYERS · DRAG TO LOOK AROUND';}requestAnimationFrame(animate);
   let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});canvas.addEventListener('pointerup',e=>{if(!down)return;const dx=e.clientX-down.x;down=null;if(Math.abs(dx)<12)return;const current=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;table.style.setProperty('--cameraYaw',Math.max(-70,Math.min(70,current+dx*.14))+'deg');});
  }
  const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js';script.onload=boot;script.onerror=()=>{status.textContent='3D ENGINE NEEDS INTERNET';host.querySelector('.tableWrap').style.setProperty('visibility','visible','important');};document.head.append(script);

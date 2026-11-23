@@ -1601,4 +1601,39 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
 /* A player's existing POV seat classes are used to keep the camera relative to their own chair. */
 (function(){const scene=document.getElementById('tableScene');if(!scene)return;scene.setAttribute('aria-label','First-person poker room viewed from your assigned chair');})();
 </script>
+
+<style id="stationary-table-camera-v0414">
+/* v0.4.14: fixed table; lateral gaze affects upright character sprites only. */
+#tableScreen .tableWrap{
+ transform:translate(-50%,-4%) perspective(1300px) rotateX(49deg)!important;
+ transition:none!important;
+}
+#tableScreen .tableWrap .seat{
+ transform:translate(calc(-50% + var(--gazeOffset,0px)),-50%) rotateX(-49deg)!important;
+ transition:transform .28s ease!important;
+}
+#tableScreen .tableWrap .seat.pov0{transform:translate(-50%,-50%) rotateX(-49deg)!important}
+#tableScreen .tableWrap .seat:not(.pov0) .seatBody,
+#tableScreen .tableWrap .seat:not(.pov0) .seatAvatar{
+ transform-style:flat!important;
+ backface-visibility:visible;
+}
+#tableScreen .tableWrap .seat:not(.pov0) .seatAvatar{object-fit:contain!important}
+@media(prefers-reduced-motion:reduce){#tableScreen .tableWrap .seat{transition:none!important}}
+</style>
+<script>
+(function(){
+ const table=document.querySelector('#tableScreen .tableWrap');
+ if(!table)return;
+ const apply=()=>{
+  const yaw=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;
+  /* The felt, cards and table rim never turn. Only the visible people slide
+     within the viewport, like looking sideways at flat stage sprites. */
+  const offset=Math.max(-85,Math.min(85,yaw*1.5));
+  table.style.setProperty('--gazeOffset',offset+'px');
+ };
+ new MutationObserver(apply).observe(table,{attributes:true,attributeFilter:['style']});
+ apply();
+})();
+</script>
 </body></html>

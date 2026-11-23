@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.34 Offline 3D Poker & Cards</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#1c1015"><title>I Lost It All — v0.4.38 3D Poker Room</title>
 <style>:root{--red:#b82626;--wine:#4b111a;--gold:#efb25a;--cream:#ffe6bc;--ink:#100b0e;--felt:#125940;--mint:#80e6a2;--gray:#b7afa8}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;}body{background:radial-gradient(at 40% -25%,#654035 0%,#1c1015 45%,#09080b 100%);color:var(--cream);font:600 16px/1.35 system-ui,Arial,sans-serif;overflow-x:hidden}button,input{font:inherit}button{touch-action:manipulation;cursor:pointer}button:disabled{opacity:.39;cursor:not-allowed}button:focus-visible,input:focus-visible{outline:3px solid #ffdf91;outline-offset:2px}[hidden]{display:none!important}.screen{display:none;min-height:100vh;min-height:100dvh}.screen.active{display:block}h1,h2,h3,p{margin-top:0}.display{font-family:Impact,'Arial Black',system-ui,sans-serif;letter-spacing:.045em;line-height:1;transform:skew(-3deg)}.goldText{color:var(--gold)}.redText{color:#ed3d34}.muted{color:#bcada5;font-size:13px}.btn{border:2px solid #090709;border-bottom-width:5px;border-radius:5px;background:#ad2825;color:#fff2dc;text-shadow:1px 2px #42101d;box-shadow:0 5px 0 #10080a;font-family:Impact,'Arial Black',sans-serif;font-size:clamp(15px,2.5vw,20px);padding:12px 16px;letter-spacing:.055em;min-height:49px;transition:filter .13s,transform .13s}.btn:not(:disabled):active{transform:translateY(3px);box-shadow:0 2px 0 #10080a}.btn:hover:not(:disabled){filter:brightness(1.2)}.btn.gold{background:#cb8839;color:#190d0c;text-shadow:none}.btn.green{background:#258266}.btn.outline{background:#251b20;border-color:#78543f}.btn.sm{font-size:13px;padding:8px 11px;min-height:38px}.panel{background:linear-gradient(155deg,#25161b,#130e12);border:3px solid #070707;outline:1px solid #865037;box-shadow:0 13px 40px #0009}
 #menuScreen{display:none;place-items:center;padding:clamp(9px,3vw,30px)}#menuScreen.active{display:grid}.menuShell{width:min(1150px,100%);min-height:min(86vh,780px);display:grid;grid-template-columns:1.1fr .9fr;overflow:hidden}.menuArt{position:relative;background:linear-gradient(0deg,#160a10b8 0%,transparent 40%),linear-gradient(90deg,transparent 75%,#1a0e16 100%),var(--cover) 50% 50%/cover;min-height:560px}.menuArt:after{content:'';position:absolute;inset:auto 0 0;height:43px;background:repeating-linear-gradient(110deg,transparent 0 32px,#d926253a 32px 44px)}.menuRight{display:flex;flex-direction:column;gap:15px;justify-content:center;padding:clamp(16px,4.5vw,62px);background:radial-gradient(at 0% 45%,#6d2225 0%,#251216 56%,#100c10 100%);text-align:center}.menuTitle{font-size:clamp(44px,6vw,84px);color:#ffe2aa;text-shadow:4px 6px 0 #180a10,7px 9px 0 #a21722;margin:0;line-height:.95}.menuTitle em{color:#d92b29;font-style:normal}.eyebrow{color:var(--gold);letter-spacing:.28em;font-size:12px;font-weight:900}.menuHint{font-size:13px;color:#c0a49b;margin:-2px 0}.menuActions{display:grid;gap:9px;margin-top:10px}.menuActions .btn{font-size:21px;min-height:52px}.debtPlate{background:#09090d;border:3px solid #9a2524;box-shadow:0 3px 0 #000;padding:12px 15px;display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:13px}.debtPlate b{font-family:Impact,'Arial Black',sans-serif;color:#ee372d;font-size:30px}.version{font-size:11px;color:#ad9b91}
@@ -794,7 +794,7 @@ function modal(title,html,buttons=[['OK',()=>closeModal()]]){$('modalTitle').tex
 function closeModal(){$('modalLayer').classList.remove('show')}
 function rules(){modal('THE HOUSE RULES',`<p>Six-seat <b>Texas Hold’em</b>. Each player gets two private cards, and five community cards make the best five-card hand. Vinny “The Hammer” is the <b>dealer</b>, not a competing player.</p><p>Everyone starts a run with <b>$1,000 fictional chips</b> and your account starts with <b>$20,000 in fictional debt</b>. Bet, call, check, fold or shove all-in. Pots are split correctly when stacks differ.</p><p>Empty seats are controlled by trash-talking AI. When an AI busts, a replacement buys in with $1,000 next hand. This adds chips to the table over time, so earning more than $20,000 is possible.</p><p>Between hands, you may cash out. <b>Only the amount over $20,000</b> reduces <b>your saved debt</b> on the next run. Anything at or below $20,000 leaves the debt unchanged. Lose every last chip and Vinny personally drags you to his back room.</p><p>Online rooms use free public PeerJS signaling and direct WebRTC connections. No server setup is needed, but some networks block peer-to-peer connections. The host must keep the game open. If a guest leaves, AI takes their seat.</p><p class="muted">Entertainment only. No purchases, payments, gambling deposits or real-money prizes.</p>`)}
 function settings(){modal('SETTINGS',`<p>Sound effects: <b>${data.sound?'ON':'OFF'}</b> · Spoken voice lines: <b>${data.voices?'ON':'OFF'}</b></p><p>Runs played: <b>${data.runs}</b> · Best chip stack: <b>${fmt(data.best)}</b></p><p>Saved debt: <b>${fmt(data.debt)}</b></p><p class="muted">Voices use your browser’s text-to-speech engine. Availability varies by browser and device; tap the screen first to allow audio.</p>`,[['TOGGLE SOUND',()=>{data.sound=!data.sound;persist();settings()}],['TOGGLE VOICES',()=>{data.voices=!data.voices;persist();settings()}],['RESET DEBT',()=>modal('RESET SAVED DEBT?',`<p>Restore the full $20,000 debt and clear your records?</p>`,[['YES, RESET',()=>{data.debt=20000;data.runs=0;data.best=1000;persist();settings()}],['CANCEL',settings]])],['DONE',closeModal]])}
-function credits(){modal('CREDITS',`<p><b>I Lost It All</b> · Version 0.4.3 · Animated cartoon cast, fullscreen, six-seat mob poker.</p><p>Six original cartoon gamblers, Vinny the mob-boss dealer, comic-book cutscenes and browser-generated voices.</p><p class="muted">A free fictional poker game with no real-money betting.</p>`)}
+function credits(){modal('CREDITS',`<p><b>I Lost It All</b> · Version 0.4.38 · Animated cartoon cast, fullscreen, six-seat mob poker.</p><p>Six original cartoon gamblers, Vinny the mob-boss dealer, comic-book cutscenes and browser-generated voices.</p><p class="muted">A free fictional poker game with no real-money betting.</p>`)}
 const deck=()=>{const a=[];for(const suit of SUITS)for(const rank of RANKS)a.push({rank,suit});for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 function value5(cards){const ranks=cards.map(c=>c.rank).sort((a,b)=>b-a);const f={};ranks.forEach(r=>f[r]=(f[r]||0)+1);const groups=Object.entries(f).map(([r,n])=>({r:+r,n})).sort((a,b)=>b.n-a.n||b.r-a.r);const flush=cards.every(c=>c.suit===cards[0].suit);let straight=0;const u=[...new Set(ranks)];if(u.includes(14))u.push(1);for(let k=0;k<=u.length-5;k++)if(u[k]-u[k+4]===4){straight=u[k];break}
 if(flush&&straight)return[8,straight];if(groups[0].n===4)return[7,groups[0].r,groups[1].r];if(groups[0].n===3&&groups[1].n===2)return[6,groups[0].r,groups[1].r];if(flush)return[5,...ranks];if(straight)return[4,straight];if(groups[0].n===3)return[3,groups[0].r,...groups.slice(1).map(g=>g.r).sort((a,b)=>b-a)];if(groups[0].n===2&&groups[1].n===2)return[2,...[groups[0].r,groups[1].r].sort((a,b)=>b-a),groups[2].r];if(groups[0].n===2)return[1,groups[0].r,...groups.slice(1).map(g=>g.r).sort((a,b)=>b-a)];return[0,...ranks]}
@@ -1763,7 +1763,8 @@ function buildSphere(rings=12,segments=18){const v=[],idx=[];for(let y=0;y<=ring
 function buildCylinder(segments=28){const v=[],idx=[];for(let i=0;i<=segments;i++){let a=i/segments*2*Math.PI,x=Math.cos(a)*.5,z=Math.sin(a)*.5;for(let y of [-.5,.5])v.push(x,y,z,Math.cos(a),0,Math.sin(a),i/segments,y+.5);}for(let i=0;i<segments;i++){let a=i*2;idx.push(a,a+1,a+2,a+1,a+3,a+2);}for(let top of [0,1]){let center=v.length/8;v.push(0,top?.5:-.5,0,0,top?1:-1,0,.5,.5);for(let i=0;i<=segments;i++){let a=i/segments*2*Math.PI;v.push(Math.cos(a)*.5,top?.5:-.5,Math.sin(a)*.5,0,top?1:-1,0,(Math.cos(a)+1)/2,(Math.sin(a)+1)/2);}for(let i=0;i<segments;i++){let p=center+1+i;idx.push(center,top?p+1:p,top?p:p+1);}}return mesh(v,idx);}
 function buildPlane(horizontal=true){let v;if(horizontal){v=[-.5,0,-.5,0,1,0,0,1,.5,0,-.5,0,1,0,1,1,.5,0,.5,0,1,0,1,0,-.5,0,.5,0,1,0,0,0];}else{v=[-.5,-.5,0,0,0,1,0,0,.5,-.5,0,0,0,1,1,0,.5,.5,0,0,0,1,1,1,-.5,.5,0,0,0,1,0,1];}return mesh(v,[0,1,2,0,2,3]);}
 function buildBox(){const v=[],ind=[],faces=[[[0,0,1],[-.5,-.5,.5],[.5,-.5,.5],[.5,.5,.5],[-.5,.5,.5]],[[0,0,-1],[.5,-.5,-.5],[-.5,-.5,-.5],[-.5,.5,-.5],[.5,.5,-.5]],[[1,0,0],[.5,-.5,.5],[.5,-.5,-.5],[.5,.5,-.5],[.5,.5,.5]],[[-1,0,0],[-.5,-.5,-.5],[-.5,-.5,.5],[-.5,.5,.5],[-.5,.5,-.5]],[[0,1,0],[-.5,.5,.5],[.5,.5,.5],[.5,.5,-.5],[-.5,.5,-.5]],[[0,-1,0],[-.5,-.5,-.5],[.5,-.5,-.5],[.5,-.5,.5],[-.5,-.5,.5]]];for(let i=0;i<faces.length;i++){const [n,...pts]=faces[i];for(let j=0;j<4;j++)v.push(...pts[j],...n,j===0||j===3?0:1,j<2?0:1);const a=i*4;ind.push(a,a+1,a+2,a,a+2,a+3);}return mesh(v,ind);}
-const M={sphere:buildSphere(14,22),cylinder:buildCylinder(24),plane:buildPlane(),wall:buildPlane(false),box:buildBox()};
+function buildDisc(segments=64){const v=[0,0,0,0,1,0,.5,.5],idx=[];for(let i=0;i<=segments;i++){const a=2*Math.PI*i/segments;v.push(Math.cos(a)*.5,0,Math.sin(a)*.5,0,1,0,(Math.cos(a)+1)/2,(Math.sin(a)+1)/2);if(i<segments)idx.push(0,i+1,i+2);}return mesh(v,idx);}
+const M={sphere:buildSphere(14,22),cylinder:buildCylinder(32),disc:buildDisc(72),plane:buildPlane(),wall:buildPlane(false),box:buildBox()};
 const colorCache={};function color(c){if(colorCache[c])return colorCache[c];let hex=c.replace('#','');if(hex.length===3)hex=hex.split('').map(v=>v+v).join('');const num=parseInt(hex,16);return colorCache[c]=[(num>>16&255)/255,(num>>8&255)/255,(num&255)/255,1];}
 let activeMesh=null;function render(m,mat,col,tex=null){if(activeMesh!==m){gl.bindBuffer(gl.ARRAY_BUFFER,m.vbo);gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,m.ibo);gl.vertexAttribPointer(A.pos,3,gl.FLOAT,false,32,0);gl.vertexAttribPointer(A.norm,3,gl.FLOAT,false,32,12);gl.vertexAttribPointer(A.uv,2,gl.FLOAT,false,32,24);activeMesh=m;}gl.uniformMatrix4fv(U.model,false,mat);gl.uniform4fv(U.color,color(col));gl.uniform1f(U.tex,tex?1:0);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,tex||null);gl.drawElements(gl.TRIANGLES,m.count,gl.UNSIGNED_SHORT,0);}
 function obj(kind,x,y,z,sx,sy,sz,col,angle=0,texture=null){render(M[kind],model(x,y,z,sx,sy,sz,angle),col,texture);}
@@ -1773,25 +1774,100 @@ function makeTexture(key,paint,w=128,h=192){if(textureCache.has(key))return text
 const suits={'H':'♥','D':'♦','S':'♠','C':'♣','♥':'♥','♦':'♦','♠':'♠','♣':'♣'};
 function cardTexture(rank,suit,back){const symbol=suits[suit]||suit||'♠',red=/[HD♥♦]/.test(suit||'');return makeTexture(back?'BACK':String(rank)+symbol,(p,w,h)=>{p.fillStyle=back?'#732338':'#fff4db';p.fillRect(0,0,w,h);p.strokeStyle='#e8c88d';p.lineWidth=6;p.strokeRect(4,4,w-8,h-8);p.lineWidth=2;p.strokeStyle=back?'#c87b7c':'#bb9b72';p.strokeRect(13,13,w-26,h-26);if(back){p.strokeStyle='#be6579';p.lineWidth=2;for(let k=-h;k<w+h;k+=17){p.beginPath();p.moveTo(k,13);p.lineTo(k+h,h-13);p.stroke();}p.fillStyle='#e6c790';p.font='bold 70px Georgia';p.textAlign='center';p.fillText('♠',w/2,h*.69);}else{p.fillStyle=red?'#b91f30':'#151923';p.textAlign='left';p.font='bold 41px Georgia';p.fillText(String(rank),16,49);p.font='bold 36px Georgia';p.fillText(symbol,17,88);p.textAlign='center';p.font='bold 86px Georgia';p.fillText(symbol,w/2+8,h*.74);p.font='bold 25px Georgia';p.fillText(String(rank),w-22,h-19);}},128,192);}
 function labelTexture(name){return makeTexture('LABEL:'+name,(p,w,h)=>{p.fillStyle='#1c1015';p.fillRect(0,0,w,h);p.strokeStyle='#b88c52';p.lineWidth=4;p.strokeRect(2,2,w-4,h-4);p.fillStyle='#f6d69b';p.font='bold 27px sans-serif';p.textAlign='center';p.fillText(name.slice(0,17).toUpperCase(),w/2,39);},256,54);}
-const seatPositions={1:[2.85,1.10],2:[2.90,-.85],3:[0,-2.60],4:[-2.90,-.85],5:[-2.85,1.10]};
-const cardPositions={1:[1.78,1.10],2:[1.82,-.82],3:[0,-1.40],4:[-1.82,-.82],5:[-1.78,1.10]};
-const chipPositions={1:[2.72,1.86],2:[2.68,-1.58],3:[0,-2.18],4:[-2.68,-1.58],5:[-2.72,1.86],0:[-2.48,2.05]};
+// Seats sit beyond the padded rail; the felt has separate card and chip lanes.
+const seatPositions={1:[3.64,1.34],2:[3.75,-1.00],3:[0,-3.34],4:[-3.75,-1.00],5:[-3.64,1.34]};
+const cardPositions={1:[2.02,1.18],2:[2.14,-.92],3:[0,-1.65],4:[-2.14,-.92],5:[-2.02,1.18]};
+const chipPositions={1:[2.62,.53],2:[2.67,-.31],3:[1.08,-1.56],4:[-2.67,-.31],5:[-2.62,.53],0:[-1.72,1.54]};
 const avatarColors=['#463246','#4d3440','#344356','#543b2b','#3d334f','#354a3e'];
 let yaw=0,drag=null,frames=0,boardPrev='',dealStart=0,handPrev='',lastRendered=0;
 function seats(){const arr=[];for(let i=0;i<6;i++){const el=host.querySelector('.seat.pov'+i);const name=el?.querySelector('.seatName')?.textContent?.trim()||'';const val=el?.querySelector('.seatStack')?.textContent||'';let stack=Number(val.replace(/[^0-9.]/g,''))||0;arr.push({active:!!el&&!/empty/i.test(name),name,stack,el});}return arr;}
 function cardsFrom(root){return Array.from(root.querySelectorAll('.pcard:not(.blank)')).map(el=>({rank:el.querySelector('span')?.textContent?.trim()||'',suit:el.querySelector('b')?.textContent?.trim()||''})).filter(c=>c.rank&&c.suit);}
 function board(){const el=host.querySelector('#boardCards');return el?cardsFrom(el).slice(0,5):[];}
 function hole(){const el=host.querySelector('.seat.you .seatCards');return el?cardsFrom(el).slice(0,2):[];}
-function chips(x,z,amount){if(!amount)return;const colors=['#f3e4c5','#bb283c','#2e5d99','#2d7f56','#d5ad58'];const stacks=Math.max(1,Math.min(4,Math.ceil(amount/700)));for(let s=0;s<stacks;s++){const rows=Math.max(1,Math.min(5,Math.ceil(amount/(stacks*220))-s%2));const col=s%2,row=Math.floor(s/2);const sx=x+(col-.5)*.34;const sz=z+row*.28;for(let j=0;j<rows;j++){const yy=1.10+j*.042;obj('cylinder',sx,yy,sz,.15,.042,.15,colors[(s+j)%colors.length]);if(j===rows-1)obj('cylinder',sx,yy+.024,sz,.128,.006,.128,'#f7ead2');}}}
-function avatar(i,x,z,name,t,dealer=false){const bob=Math.sin(t*.0014+i*1.7)*.012;const face=['#c58b70','#a76c4b','#e1a37a','#9a684e','#bd8d6c'][i%5],coat=dealer?'#241e29':avatarColors[i%6],shirt=dealer?'#7e1f2d':'#ece1ca';obj('cylinder',x,.83,z,.62,.28,.58,'#251a1e');obj('sphere',x,1.40+bob,z,.68,.52,.50,coat);obj('sphere',x,1.80+bob,z+.02,.60,.44,.46,coat);obj('sphere',x,2.06+bob,z,.16,.16,.16,'#6c4a3a');obj('sphere',x,2.24+bob,z,.46,.50,.42,face);obj('sphere',x,2.54+bob,z-.02,.40,.18,.40,i%2?'#261e24':'#4b3327');obj('cylinder',x,2.49+bob,z,.62,.05,.54,i%2?'#261e24':'#4b3327');obj('sphere',x-.105,2.26+bob,z+.38,.05,.05,.05,'#161117');obj('sphere',x+.105,2.26+bob,z+.38,.05,.05,.05,'#161117');obj('sphere',x,2.12+bob,z+.38,.12,.16,.05,'#a55f50');obj('sphere',x,1.74+bob,z+.42,.14,.26,.06,shirt);for(let s of [-1,1]){line([x+s*.28,1.96+bob,z+.02],[x+s*.52,1.42+bob,z+.22],.10,coat);line([x+s*.52,1.42+bob,z+.22],[x+s*.58,1.08+bob,z+.32],.082,coat);obj('sphere',x+s*.59,1.06+bob,z+.33,.15,.11,.14,face);}for(let s of [-1,1]){line([x+s*.20,1.02,z],[x+s*.24,.58,z+.08],.11,'#2b1d22');line([x+s*.24,.58,z+.08],[x+s*.22,.18,z+.12],.095,'#1d171a');}if(name){obj('wall',x,2.92+bob,z+.28,1.24,.28,1,'#ffffff',0,labelTexture(name));}}
+function chips(x,z,amount){if(!amount)return;const colors=['#f3e4c5','#bb283c','#2e5d99','#2d7f56','#d5ad58'];const stacks=Math.max(1,Math.min(4,Math.ceil(amount/700)));for(let s=0;s<stacks;s++){const rows=Math.max(1,Math.min(5,Math.ceil(amount/(stacks*220))-s%2));const col=s%2,row=Math.floor(s/2);const sx=x+(col-.5)*.34;const sz=z+row*.28;for(let j=0;j<rows;j++){const yy=1.126+j*.042;obj('cylinder',sx,yy,sz,.15,.042,.15,colors[(s+j)%colors.length]);if(j===rows-1)obj('cylinder',sx,yy+.024,sz,.128,.006,.128,'#f7ead2');}}}
+function avatar(i,x,z,name,t,dealer=false){
+ const bob=Math.sin(t*.0013+i*1.6)*.014;
+ const face=['#c78d70','#aa7054','#e5af8d','#9f7159','#cb9b7f'][i%5];
+ const coat=dealer?'#29222b':avatarColors[i%6],hair=['#272026','#402b21','#251b18','#573b29','#312527'][i%5];
+ const trim=dealer?'#b99b70':'#b8a9a1',shirt=dealer?'#f0e8d7':'#e3d4bb';
+ // Rotate the whole body toward the center of the table, rather than every face pointing forward.
+ const facing=dealer?0:Math.atan2(-x,-z);
+ const cs=Math.cos(facing),sn=Math.sin(facing);
+ function at(px,pz){const dx=px-x,dz=pz-z;return [x+cs*dx+sn*dz,z-sn*dx+cs*dz];}
+ function part(kind,px,py,pz,sx,sy,sz,col,angle=0,texture=null){const [wx,wz]=at(px,pz);obj(kind,wx,py,wz,sx,sy,sz,col,angle+facing,texture);}
+ function limb(a,b,r,col){const [ax,az]=at(a[0],a[2]),[bx,bz]=at(b[0],b[2]);line([ax,a[1],az],[bx,b[1],bz],r,col);}
+ const lean=Math.sin(t*.0008+i*2.2)*.018,by=bob+lean;
+ // A real chair behind the character adds depth and makes the seated posture clear.
+ part('cylinder',x,.61,z-.28,.67,.30,.67,'#20191d');
+ part('box',x,.94,z-.46,.83,1.23,.15,'#34252b');
+ part('box',x,.38,z-.12,.90,.17,.77,'#3c2931');
+ for(const side of [-1,1])part('cylinder',x+side*.39,.40,z-.15,.10,.76,.10,'#281b21');
+ // Jacket has several overlapping volumes rather than a single pill-shaped torso.
+ part('sphere',x,1.32+by,z,.75,.69,.58,coat);
+ part('sphere',x,1.72+by,z+.018,.70,.62,.52,coat);
+ part('sphere',x,1.99+by,z+.04,.22,.24,.23,face);
+ part('sphere',x,1.80+by,z+.29,.23,.44,.19,shirt);
+ part('sphere',x-.205,1.82+by,z+.33,.21,.34,.095,coat);
+ part('sphere',x+.205,1.82+by,z+.33,.21,.34,.095,coat);
+ for(let n=0;n<3;n++)part('sphere',x,1.89+by-n*.12,z+.405,.025,.027,.014,trim);
+ if(dealer)part('sphere',x,1.88+by,z+.405,.07,.20,.028,'#9c2336');
+ // Head has jaw, ears, brow, eyes, nose and mouth, all with independent 3D volume.
+ part('sphere',x,2.27+by,z,.50,.57,.47,face);
+ part('sphere',x,2.145+by,z+.17,.34,.25,.33,face);
+ for(const side of [-1,1]){
+  part('sphere',x+side*.24,2.29+by,z+.008,.115,.19,.10,face);
+  part('sphere',x+side*.135,2.28+by,z+.225,.072,.066,.04,'#f0ddc6');
+  part('sphere',x+side*.135,2.28+by,z+.258,.031,.039,.024,'#17151b');
+  part('sphere',x+side*.135,2.375+by,z+.238,.119,.029,.025,hair);
+  part('sphere',x+side*.17,2.18+by,z+.19,.13,.078,.056,'#b87d66');
+ }
+ part('sphere',x,2.23+by,z+.285,.105,.17,.13,'#cb9679');
+ part('sphere',x,2.105+by,z+.27,.17,.035,.028,'#6f3a3b');
+ part('sphere',x,2.54+by,z-.04,.50,.22,.46,hair);
+ part('sphere',x,2.58+by,z+.13,.42,.09,.29,hair);
+ if(dealer){part('cylinder',x,2.69+by,z,.48,.22,.48,'#241b24');part('cylinder',x,2.59+by,z,.69,.036,.59,'#241b24');part('cylinder',x,2.66+by,z,.49,.045,.49,'#9a2634');}
+ // Two-piece sleeves and round shoulder/elbow joints make silhouettes smoother.
+ for(const side of [-1,1]){
+  const sx=x+side*.34,ex=x+side*.57,ez=z+.24;
+  part('sphere',sx,1.89+by,z,.27,.29,.30,coat);
+  limb([sx,1.87+by,z+.02],[ex,1.52+by,ez],.122,coat);
+  part('sphere',ex,1.52+by,ez,.205,.20,.215,coat);
+  limb([ex,1.51+by,ez],[ex+side*.02,1.27+by,ez+.10],.099,coat);
+  part('sphere',ex+side*.02,1.25+by,ez+.10,.14,.10,.13,shirt);
+  part('sphere',ex+side*.01,1.16+by,ez+.12,.18,.15,.17,face);
+  for(let finger=0;finger<4;finger++)part('sphere',ex+side*(finger-1.5)*.055,1.105+by,ez+.20,.048,.088,.056,face);
+  // Seated legs continue below the rail rather than floating beside the chair.
+  limb([x+side*.23,1.10,z-.06],[x+side*.25,.69,z+.14],.145,'#2c2530');
+  part('sphere',x+side*.25,.63,z+.14,.245,.23,.27,'#2c2530');
+  limb([x+side*.25,.63,z+.14],[x+side*.22,.25,z+.26],.11,'#1b1920');
+  part('sphere',x+side*.22,.18,z+.34,.26,.12,.36,'#171519');
+ }
+ // Floating labels always face the local player, never appear edge-on.
+ if(name)obj('wall',x,2.99+by,z+.29,1.27,.27,1,'#ffffff',0,labelTexture(name));
+}
 function room(t){obj('plane',0,-.05,0,16,1,17,'#35251f');obj('box',0,2.2,-6.0,15,4.6,.2,'#35232a');obj('box',-7.0,2.2,0,.25,4.6,14,'#2c2028');obj('box',7.0,2.2,0,.25,4.6,14,'#2c2028');for(let i=-3;i<=3;i++){obj('box',i*1.75,2.0,-5.85,.11,3.7,.14,'#67412f');obj('box',i*1.75+.82,1.15,-5.82,1.40,.05,.14,'#9a6a41');}obj('box',0,3.95,-5.75,4.4,.65,.12,'#25131d');obj('wall',0,3.95,-5.64,3.4,.45,1,'#ffffff',0,labelTexture('I LOST IT ALL'));obj('cylinder',0,3.85,-.55,1.40,.22,1.40,'#7a543a');obj('cylinder',0,3.68,-.55,1.05,.06,1.05,'#e4b77d');obj('sphere',0,3.52,-.55,.38,.12,.38,'#ffe6a8');for(let x of [-5,5]){obj('box',x,1.25,-4.3,1.2,2.5,.25,'#5a3a2c');obj('sphere',x,2.35,-4.0,.28,.28,.15,'#e7bb7e');}}
-function table(){obj('cylinder',0,.52,0,5.48,.60,3.36,'#34201e');obj('cylinder',0,.83,0,5.60,.13,3.48,'#ae7d48');obj('cylinder',0,.91,0,5.31,.13,3.20,'#211e1c');obj('cylinder',0,1.00,0,5.16,.09,3.05,'#176345');obj('cylinder',0,1.056,0,4.91,.012,2.81,'#1c704d');obj('cylinder',0,1.075,0,5.02,.02,2.92,'#c39a62');obj('cylinder',0,1.082,0,4.58,.004,2.48,'#3d8d63');for(let x of [-1.65,1.65])for(let z of [-.75,.75])obj('cylinder',x,.32,z,.29,.64,.29,'#3b231d');for(let i=0;i<6;i++){const a=i*Math.PI/3;obj('cylinder',Math.cos(a)*2.65,1.09,Math.sin(a)*1.55,.095,.013,.095,'#b9955d');}for(let i=0;i<5;i++){obj('plane',(i-2)*.53,1.085,-.18,.44,1,.62,'#ffffff',0,cardTexture('','',true));}obj('cylinder',0,1.068,0,.98,.006,.80,'#b3a477');obj('cylinder',0,1.076,0,.94,.009,.75,'#1c704d');}
+function table(){
+ // One large top surface avoids z-fighting between gold trim and green felt on iOS GPUs.
+ obj('cylinder',0,.54,0,7.05,.69,4.63,'#2b1b1c');
+ obj('cylinder',0,.83,0,7.13,.16,4.69,'#a77b49');
+ obj('cylinder',0,.925,0,6.92,.14,4.47,'#251b1d');
+ obj('cylinder',0,1.012,0,6.67,.04,4.21,'#b58a50');
+ obj('cylinder',0,1.054,0,6.55,.05,4.08,'#155a3d');
+ // The top green disc is guaranteed to be the highest table surface.
+ obj('disc',0,1.085,0,6.47,1,4.00,'#24714c');
+ // A subtle inner felt line, inset from the chip/card areas.
+ for(let n=0;n<18;n++){
+  const a=(n+.5)*Math.PI/9,x=Math.cos(a)*3.11,z=Math.sin(a)*1.92;
+  obj('cylinder',x,1.091,z,.052,.008,.052,'#8cae81');
+ }
+ for(const x of [-2.18,2.18])for(const z of [-1.05,1.05])obj('cylinder',x,.35,z,.32,.7,.32,'#32221e');
+}
 function card(x,z,c,face=true,rotation=0,scaleFactor=1){obj('plane',x,1.086,z,.39*scaleFactor,1,.56*scaleFactor,'#ffffff',rotation,cardTexture(c?.rank,c?.suit,!face));}
 function drawCards(seatData,shown,t){const hand=host.querySelector('.roundInfo')?.textContent||'';const key=hand.split('·')[0]||'';if(key!==handPrev){handPrev=key;dealStart=t;}for(let i=1;i<=5;i++){if(!seatData[i].active)continue;const [x,z]=cardPositions[i];for(let j=0;j<2;j++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*135-j*850)/360));if(wait<=0)continue;const start=[0,-1.48],spread=i===3?.52:.46,xx=start[0]+(x+(j-.5)*spread-start[0])*wait,zz=start[1]+(z-(j===0?.05:-.05)-start[1])*wait;card(xx,zz,null,false,0,.93);}}const peek=host.querySelector('.myHoleHUD')?.classList.contains('revealed');const own=hole();for(let i=0;i<2;i++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*850)/360));if(wait<=0)continue;card((i-.5)*.50,1.44,own[i],!!(peek&&own[i]),0,1.04);}for(let i=0;i<shown.length;i++){card((i-2)*.53,-.18,shown[i],true,0,1.14);}}
 function hands(t){const skin='#c59072',sleeve='#3a2735';for(let s of [-1,1]){const wrist=[s*.92,.92,2.04],elbow=[s*1.34,.70,2.96];line(elbow,wrist,.17,sleeve);line([s*.95,.92,2.04],[s*.80,1.01,1.82],.13,skin);obj('sphere',s*.77,1.02,1.79,.32,.12,.24,skin);for(let i=0;i<4;i++){const x=s*(.61+i*.082);line([x,1.02,1.72],[x-s*.04,1.04,1.50+(i%2)*.05],.037,skin);obj('sphere',x-s*.04,1.04,1.50+(i%2)*.05,.03,.03,.03,'#dba786');}line([s*.94,1.01,1.84],[s*1.07,1.03,1.69],.052,skin);obj('sphere',s*1.07,1.03,1.69,.04,.04,.04,'#dba786');}}
 function monitor(shown){const m=host.querySelector('#dealerMonitor3d');if(!m)return;const wrap=m.querySelector('.dealerMonitorCards');if(!wrap)return;const k=JSON.stringify(shown);if(wrap.dataset.key===k)return;wrap.dataset.key=k;wrap.replaceChildren();for(let i=0;i<5;i++){const e=document.createElement('span');e.className='dealerMiniCard '+(i>=shown.length?'pending':/[♥♦HD]/.test(shown[i].suit)?'red':'');e.textContent=i<shown.length?shown[i].rank+(suits[shown[i].suit]||shown[i].suit):'?';wrap.append(e);}const monitorCanvas=m.querySelector('canvas');if(monitorCanvas){monitorCanvas.width=300;monitorCanvas.height=125;const p=monitorCanvas.getContext('2d');p.fillStyle='#261719';p.fillRect(0,0,300,125);p.fillStyle='#875e3e';p.beginPath();p.ellipse(150,64,139,54,0,0,7);p.fill();p.fillStyle='#155c3d';p.beginPath();p.ellipse(150,64,132,48,0,0,7);p.fill();p.fillStyle='#ffe0a0';p.textAlign='center';p.font='bold 11px sans-serif';p.fillText('VINNY · TABLE CAMERA',150,22);for(let i=0;i<5;i++){const x=55+i*41;p.fillStyle='#d8cfb9';p.fillRect(x,46,32,43);if(i<shown.length){p.fillStyle='#fff3d9';p.fillRect(x+2,48,28,39);p.fillStyle=/[♥♦HD]/.test(shown[i].suit)?'#bd2837':'#171b24';p.font='bold 17px Georgia';p.fillText(shown[i].rank+(suits[shown[i].suit]||shown[i].suit),x+16,75);}}}}
 function size(){const rect=host.getBoundingClientRect();const ratio=Math.min(window.devicePixelRatio||1,window.innerWidth<700?1:1.3),w=Math.max(2,Math.round(rect.width*ratio)),h=Math.max(2,Math.round(rect.height*ratio));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}gl.uniformMatrix4fv(U.projection,false,perspective((window.innerWidth<700?68:60)*Math.PI/180,w/h,.08,40));}
-function frame(t){requestAnimationFrame(frame);if(!screen.classList.contains('active')||host.classList.contains('poker3d-fallback'))return;if(t-lastRendered<50)return;lastRendered=t;try{size();gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(U.view,false,lookAt([Math.sin(yaw)*.32,2.05,3.68],[Math.sin(yaw)*4.1,1.42,-.72]));const data=seats(),shown=board();room(t);table();for(let i of [3,2,4,1,5])if(data[i].active){const [x,z]=seatPositions[i];avatar(i,x,z,data[i].name,t);}avatar(7,0,-3.10,'VINNY',t,true);for(let i=1;i<=5;i++)if(data[i].active){const [x,z]=chipPositions[i];chips(x,z,data[i].stack);}chips(chipPositions[0][0],chipPositions[0][1],data[0].stack);drawCards(data,shown,t);hands(t);monitor(shown);if(frames++===2){status.textContent='3D POKER ROOM · READY';status.style.opacity='0';}if(gl.isContextLost())throw Error('WebGL context lost');}catch(e){console.error('[Poker 3D] Render error',e);recover(e.message||String(e));}}
+function frame(t){requestAnimationFrame(frame);if(!screen.classList.contains('active')||host.classList.contains('poker3d-fallback'))return;if(t-lastRendered<50)return;lastRendered=t;try{size();gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(U.view,false,lookAt([Math.sin(yaw)*.32,2.05,3.68],[Math.sin(yaw)*4.1,1.42,-.72]));const data=seats(),shown=board();room(t);table();for(let i of [3,2,4,1,5])if(data[i].active){const [x,z]=seatPositions[i];avatar(i,x,z,data[i].name,t);}avatar(7,0,-3.65,'VINNY',t,true);for(let i=1;i<=5;i++)if(data[i].active){const [x,z]=chipPositions[i];chips(x,z,data[i].stack);}chips(chipPositions[0][0],chipPositions[0][1],data[0].stack);drawCards(data,shown,t);hands(t);monitor(shown);if(frames++===2){status.textContent='3D POKER ROOM · READY';status.style.opacity='0';}if(gl.isContextLost())throw Error('WebGL context lost');}catch(e){console.error('[Poker 3D] Render error',e);recover(e.message||String(e));}}
 const monitorNode=document.createElement('section');monitorNode.id='dealerMonitor3d';monitorNode.innerHTML='<div class="dealerMonitorTitle">● VINNY CAM <span>COMMUNITY CARDS</span></div><canvas aria-label="Dealer view of community cards"></canvas><div class="dealerMonitorCards"></div>';host.append(monitorNode);
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};try{canvas.setPointerCapture(e.pointerId);}catch(_){};});canvas.addEventListener('pointerup',e=>{if(!drag)return;const dx=e.clientX-drag.x;drag=null;yaw=Math.max(-.85,Math.min(.85,yaw+dx*.004));});
 const left=document.getElementById('povLeft'),right=document.getElementById('povRight'),center=document.getElementById('povCenter');left?.addEventListener('click',()=>yaw=Math.max(-.85,yaw-.28));right?.addEventListener('click',()=>yaw=Math.min(.85,yaw+.28));center?.addEventListener('click',()=>yaw=0);
@@ -1883,6 +1959,22 @@ window.addEventListener('resize',size,{passive:true});gl.enableVertexAttribArray
 #poker3dCanvas{filter:saturate(1.06) contrast(1.03) brightness(1.02)}
 #tableScreen .tableScene #dealerMonitor3d{backdrop-filter:blur(3px)}
 @media(max-width:600px){#tableScreen .tableScene{min-height:530px!important}#tableScreen .tableScene>.myHoleHUD{bottom:2px!important}}
+</style>
+
+<style id="poker3d-v0438-felt-character-fixes">
+#tableScreen .tableScene{overflow:hidden!important}
+#tableScreen #poker3dCanvas{image-rendering:auto;filter:saturate(1.08) contrast(1.025)}
+#tableScreen #dealerMonitor3d{max-width:205px;box-shadow:0 5px 18px #000a!important}
+@media(max-width:600px){
+ #tableScreen .tableScene{min-height:570px!important}
+ #tableScreen .tableScene #dealerMonitor3d{top:6px!important;right:6px!important;width:126px!important;border-width:1px!important}
+ #tableScreen #dealerMonitor3d canvas{display:none!important}
+ #tableScreen #dealerMonitor3d .dealerMonitorTitle{padding:5px 4px!important;font-size:8px!important;white-space:nowrap}
+ #tableScreen #dealerMonitor3d .dealerMonitorTitle span{font-size:6px!important}
+ #tableScreen #dealerMonitor3d .dealerMonitorCards{padding:4px 3px 5px!important;gap:2px!important}
+ #tableScreen #dealerMonitor3d .dealerMiniCard{min-height:23px!important;font-size:10px!important}
+ #tableScreen .tableScene>.myHoleHUD{bottom:4px!important}
+}
 </style>
 </body></html>
 <style id="poker3d-mobile-reliability-v0435">

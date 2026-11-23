@@ -1780,6 +1780,28 @@ const cardPositions={1:[2.02,1.18],2:[2.14,-.92],3:[0,-1.65],4:[-2.14,-.92],5:[-
 const chipPositions={1:[2.62,.53],2:[2.67,-.31],3:[1.08,-1.56],4:[-2.67,-.31],5:[-2.62,.53],0:[-1.72,1.54]};
 const avatarColors=['#463246','#4d3440','#344356','#543b2b','#3d334f','#354a3e'];
 let yaw=0,drag=null,frames=0,boardPrev='',dealStart=0,handPrev='',lastRendered=0;
+// Independent, short-lived 3D performance states. Only on-screen presentation changes;
+// network actions and poker rules stay untouched.
+const characterReactionState=new Map();
+function characterReaction(seat,t,dealer=false){
+ if(dealer)return {type:'idle',power:0,elapsed:9999};
+ const node=host.querySelector('.seat.pov'+seat);
+ const move=String(node?.querySelector('.lastMove')?.textContent||'').trim().toLowerCase();
+ const winner=!!node?.classList.contains('winner')||!!node?.classList.contains('doing-win');
+ const folded=!!node?.classList.contains('folded');
+ const otherWinner=!!host.querySelector('.seat.winner, .seat.doing-win');
+ const lost=otherWinner&&!winner;
+ const type=winner?'win':lost?'loss':folded||/fold/.test(move)?'fold':/raise|all.in|bet/.test(move)?'raise':/call|check/.test(move)?'call':'idle';
+ const hand=document.getElementById('roundInfo')?.textContent||'';
+ const key=hand.split('·')[0]+'|'+type+'|'+move;
+ let entry=characterReactionState.get(seat);
+ if(!entry||entry.key!==key){entry={key,started:t};characterReactionState.set(seat,entry);}
+ const elapsed=Math.max(0,t-entry.started);
+ const duration=type==='win'?4700:type==='loss'?3800:type==='fold'?1950:type==='raise'?2200:1300;
+ const power=type==='idle'?0:Math.max(0,Math.min(1,elapsed/240,(duration-elapsed)/650));
+ return {type,power,elapsed};
+}
+
 function seats(){const arr=[];for(let i=0;i<6;i++){const el=host.querySelector('.seat.pov'+i);const name=el?.querySelector('.seatName')?.textContent?.trim()||'';const val=el?.querySelector('.seatStack')?.textContent||'';let stack=Number(val.replace(/[^0-9.]/g,''))||0;arr.push({active:!!el&&!/empty/i.test(name),name,stack,el});}return arr;}
 function cardsFrom(root){return Array.from(root.querySelectorAll('.pcard:not(.blank)')).map(el=>({rank:el.querySelector('span')?.textContent?.trim()||'',suit:el.querySelector('b')?.textContent?.trim()||''})).filter(c=>c.rank&&c.suit);}
 function board(){const el=host.querySelector('#boardCards');return el?cardsFrom(el).slice(0,5):[];}
@@ -1798,12 +1820,23 @@ function avatar(i,x,z,name,t,dealer=false){
   {skin:'#b78061',coat:'#4d3648',vest:'#852d36',shirt:'#f1e6d3',hair:'#262025',hat:'#2b1c29',trim:'#dabd75',width:.86,height:1.06,hatStyle:2,beard:1,glasses:0},
   {skin:'#b8896c',coat:'#25222e',vest:'#751f2c',shirt:'#efe3ce',hair:'#282024',hat:'#27212a',trim:'#bba076',width:1.06,height:1.05,hatStyle:2,beard:1,glasses:0}
  ];
- const st=styles[archetype],by=Math.sin(t*.0011+i*1.7)*.012;
- const action=String(host.querySelector('.seat.pov'+i+' .lastMove')?.textContent||'').toLowerCase();
- const excitement=/win|raise|all.in|bet/.test(action)?1:/fold|lost/.test(action)?-1:0;
- const smile=excitement>0?.055:excitement<0?-.045:.012;
- const motion=Math.sin(t*.0024+i*2.1),headTurn=Math.sin(t*.00066+i*1.8)*.035;
- const blink=Math.sin(t*.0021+i*10)> .996 ? .012:.054;
+ const st=styles[archetype],baseBob=Math.sin(t*.0011+i*1.7)*.012;
+ const reaction=characterReaction(i,t,dealer),react=reaction.power;
+ const laughing=reaction.type==='win',angry=reaction.type==='loss',folding=reaction.type==='fold';
+ // Distinct personalities: cowboy tips hat, Ruby chuckles, Mack fumes, Vex fist-pumps,
+ // Grandpa shakes his head, Slick applauds. Each has a different timing and strength.
+ const gestureRate=[2.7,4.2,1.9,5.2,2.05,3.65,2.35][archetype];
+ const gesture=Math.sin(t*.001*gestureRate+i*1.17);
+ const excitement=laughing?1:angry||folding?-1:reaction.type==='raise'?1:0;
+ const smile=laughing?.075:angry?-.058:folding?-.028:.009;
+ const idle=Math.sin(t*.0024+i*2.1);
+ const motion=idle*(1+react*(laughing?.8:.3));
+ const headTurn=Math.sin(t*.00066+i*1.8)*.035+(angry?react*gesture*.065:folding?react*.06:0);
+ const blink=(Math.sin(t*.0021+i*10)> .996 || (angry&&react>.3))?.015:.054;
+ const chuckle=laughing?react*Math.abs(Math.sin(t*.016+i))* .065:0;
+ const frustration=angry?react*Math.abs(Math.sin(t*.012+i))*.05:0;
+ // Body language is visible in first-person without displacing anyone from their chair.
+ const by=baseBob+(react*(laughing?Math.abs(Math.sin(t*.010+i))*.055:angry?-frustration:folding?-.045:0));
  const s=st.width,h=st.height;
  const facing=dealer?0:Math.atan2(-x,-z);
  const cs=Math.cos(facing),sn=Math.sin(facing);
@@ -1822,7 +1855,7 @@ function avatar(i,x,z,name,t,dealer=false){
  for(let q=0;q<3;q++)part('sphere',x,1.85+by-q*.115,z+.476,.023,.027,.016,st.trim);
  if(dealer)part('sphere',x,1.84+by,z+.495,.065,.22,.027,'#af2a35');
  part('sphere',x,2.02+by,z+.05,.22,.20,.23,st.skin);
- const hy=2.23+(h-1)*.40+by,fx=x+headTurn;
+ const hy=2.23+(h-1)*.40+by+chuckle-frustration,fx=x+headTurn;
  // Jaw and cheekbones in multiple volumes; each avatar has a different head shape.
  part('sphere',fx,hy,z,.45*(.90+s*.10),.55*(.95+h*.05),.44,st.skin);
  part('sphere',fx,hy-.14,z+.18,.33*(.92+s*.07),.23,.30,st.skin);
@@ -1830,11 +1863,16 @@ function avatar(i,x,z,name,t,dealer=false){
   part('sphere',fx+side*.225,hy-.01,z+.015,.108,.17,.085,st.skin);
   part('sphere',fx+side*.127,hy+.025,z+.375,.072,blink,.041,'#f4e9da');
   part('sphere',fx+side*.127,hy+.025,z+.409,.027,.036,.021,'#1c181c');
-  part('sphere',fx+side*.13,hy+.12+(excitement<0?-.018:0),z+.39,.115,.025,.026,st.hair);
+  part('sphere',fx+side*.13,hy+.12-(angry?react*.055:0)+(laughing?react*.032:0),z+.39,.115,.025,.026,st.hair);
   part('sphere',fx+side*.16,hy-.095,z+.32,.11,.064,.06,'#b47861');
  }
  part('sphere',fx,hy-.045,z+.415,.097,.14,.11,st.skin);
- part('sphere',fx,hy-.19-smile,z+.378,.16,.025+Math.abs(motion)*.008,.025,excitement>0?'#713b37':'#6b3735');
+ // A mouth that visibly opens on laughter, tightens on anger and frowns on loss.
+ part('sphere',fx,hy-.19-smile,z+.381,laughing?.155:.16,
+      .022+(laughing?react*(.05+.048*Math.abs(Math.sin(t*.015))):angry?react*.008:Math.abs(motion)*.006),
+      .027,excitement>0?'#713b37':'#6b3735');
+ if(laughing&&react>.12)part('sphere',fx,hy-.213,z+.41,.106,.014,.016,'#f0ddd1');
+ if(angry&&react>.15)for(const side of [-1,1])part('sphere',fx+side*.185,hy+.14,z+.404,.076,.023,.018,'#3b2927');
  if(st.beard){part('sphere',fx,hy-.29,z+.23,st.beard===2?.30:.21,st.beard===2?.16:.09,.25,st.hair);for(const side of [-1,1])part('sphere',fx+side*.115,hy-.18,z+.40,.115,.035,.045,st.hair);}
  if(st.glasses){for(const side of [-1,1])part('sphere',fx+side*.13,hy+.025,z+.43,.19,.115,.021,'#c1ad82');part('box',fx,hy+.035,z+.435,.105,.025,.028,'#c1ad82');}
  // Character-specific hairstyles, hairline and signature hats.
@@ -1844,17 +1882,30 @@ function avatar(i,x,z,name,t,dealer=false){
  else if(archetype===4){part('sphere',fx,hy+.39,z-.16,.39,.12,.28,'#e8dec9');}
  if(st.hatStyle===1){part('cylinder',fx,hy+.49,z-.025,.62,.19,.55,st.hat);part('cylinder',fx,hy+.40,z+.04,.94,.045,.79,st.hat);part('cylinder',fx,hy+.47,z-.02,.65,.035,.57,st.trim);}
  if(st.hatStyle===2){part('cylinder',fx,hy+.51,z-.03,.53,.25,.51,st.hat);part('cylinder',fx,hy+.42,z+.03,.76,.04,.64,st.hat);part('cylinder',fx,hy+.48,z-.02,.55,.036,.53,st.trim);}
- // Natural elbow bends and distinct gestures rather than rigid floating cylinders.
+ // Gesture destinations move the entire upper arm, elbow, wrist and fingers together.
  for(const side of [-1,1]){
   const sx=x+side*.36*s,ex=x+side*(.53*s+.02*motion),ez=z+.21;
+  let wave=0,reach=0,forward=0;
+  if(laughing){
+   const personal=[.16,.25,.05,.36,.10,.30,.20][archetype];
+   wave=react*(personal+((archetype===3||archetype===5)?Math.abs(gesture)*.23:.12*Math.abs(gesture)));
+   reach=react*.10;
+  }else if(angry){wave=react*(archetype===2?-.20:-.08);reach=react*(archetype===2?.23:.09);}
+  else if(folding){wave=-react*.18;forward=-react*.16;}
+  else if(reaction.type==='raise'){wave=react*.12;reach=react*.22;}
+  else if(reaction.type==='call'){reach=react*.10;}
+  if(archetype===0&&laughing&&side<0)wave+=react*.22; // cowboy hat tip
+  if(archetype===4&&angry)wave-=react*.07; // Grandpa's disapproving hand
+  const elbowY=1.46+by+wave*.45;
+  const handY=1.10+by+wave;
+  const handZ=ez+.13+reach+forward;
   part('sphere',sx,1.86+by,z,.28*s,.30,.29,st.coat);
-  limb([sx,1.84+by,z+.02],[ex,1.47+by,ez],.115*s,st.coat);
-  part('sphere',ex,1.46+by,ez,.19,.20,.19,st.coat);
-  const reach=excitement>0?.14:0;
-  limb([ex,1.45+by,ez],[ex-side*.04,1.17+by,ez+.12+reach],.095*s,st.coat);
-  part('sphere',ex-side*.04,1.18+by,ez+.10+reach,.15,.10,.14,st.shirt);
-  part('sphere',ex-side*.04,1.10+by,ez+.13+reach,.18,.13,.15,st.skin);
-  for(let finger=0;finger<4;finger++)part('sphere',ex-side*.04+side*(finger-1.5)*.055,1.054+by,ez+.24+reach,.043,.065,.043,st.skin);
+  limb([sx,1.84+by,z+.02],[ex,elbowY,ez],.115*s,st.coat);
+  part('sphere',ex,elbowY,ez,.19,.20,.19,st.coat);
+  limb([ex,elbowY,ez],[ex-side*.04,handY+.08,handZ],.095*s,st.coat);
+  part('sphere',ex-side*.04,handY+.08,handZ,.15,.10,.14,st.shirt);
+  part('sphere',ex-side*.04,handY,handZ+.03,.18,.13,.15,st.skin);
+  for(let finger=0;finger<4;finger++)part('sphere',ex-side*.04+side*(finger-1.5)*.055,handY-.046,handZ+.14,.043,.065,.043,st.skin);
   limb([x+side*.22*s,1.08,z-.04],[x+side*.25*s,.65,z+.15],.14*s,'#28252c');
   part('sphere',x+side*.25*s,.62,z+.15,.235*s,.23,.26,'#28252c');
   limb([x+side*.25*s,.62,z+.15],[x+side*.22*s,.26,z+.28],.105*s,'#1d1c20');

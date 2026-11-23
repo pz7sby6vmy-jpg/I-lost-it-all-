@@ -1723,7 +1723,7 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
   if(!window.THREE){status.textContent='3D ENGINE UNAVAILABLE — CONNECT TO INTERNET';host.querySelector('.tableWrap').style.setProperty('visibility','visible','important');return;}
   const T=THREE,renderer=new T.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
   const world=new T.Scene();world.background=new T.Color('#171016');world.fog=new T.Fog('#171016',12,26);
-  const camera=new T.PerspectiveCamera(65,1,.08,70);camera.position.set(0,1.38,2.70);
+  const camera=new T.PerspectiveCamera(65,1,.08,70);camera.position.set(0,1.43,2.17);
   world.add(new T.HemisphereLight(0xffd5a2,0x252335,1.4));const lamp=new T.PointLight(0xffd49b,95,13);lamp.position.set(0,4.5,0);lamp.castShadow=true;world.add(lamp);
   const mat=(c,rough=.82)=>new T.MeshStandardMaterial({color:c,roughness:rough});
   const wood=mat('#4b2b21'),felt=mat('#126544'),trim=mat('#b88b4d',.42),dark=mat('#201419'),skin=mat('#b98569'),shirt=mat('#5a2630');
@@ -1741,6 +1741,41 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
   for(let i=0;i<11;i++)chip((i%4-1.5)*.14,-.22+Math.floor(i/4)*.14,i%3?'#a42b35':'#dfc18b');
   const cardMaterial=new T.MeshStandardMaterial({color:'#f4e2c4',roughness:.65,side:T.DoubleSide});
   const board=[];for(let i=0;i<5;i++){const c=mesh(new T.BoxGeometry(.34,.018,.50),cardMaterial,(i-2)*.40,1.02,.32);board.push(c);}
+  // Rich environmental set dressing: carved panels, warm sconces, paintings and brass details.
+  const gold=mat('#b58a4b',.35),velvet=mat('#4a1725'),glass=mat('#d4a66b',.22);
+  for(let x=-6;x<=6;x+=2){
+   mesh(new T.BoxGeometry(1.55,1.25,.065),wood,x,2.7,-7.13);
+   mesh(new T.BoxGeometry(1.38,1.08,.075),velvet,x,2.7,-7.07);
+   mesh(new T.BoxGeometry(1.6,.065,.11),gold,x,3.36,-7.02);
+   mesh(new T.BoxGeometry(1.6,.065,.11),gold,x,2.04,-7.02);
+   mesh(new T.SphereGeometry(.10,12,10),glass,x,3.65,-7.08);
+  }
+  for(let side of [-1,1])for(let z of [-5,-2,1,4]){
+   mesh(new T.BoxGeometry(.08,2.5,1.2),wood,side*7.31,1.7,z);
+   mesh(new T.SphereGeometry(.18,12,10),glass,side*7.14,2.8,z);
+  }
+  // Felt markings, seat chips and chip towers with alternating edge colors.
+  const ring=mesh(new T.TorusGeometry(1.13,.012,5,90),gold,0,1.002,0);ring.rotation.x=Math.PI/2;ring.scale.y=.66;
+  for(let seat=0;seat<6;seat++){
+   const a=Math.PI/2+seat*Math.PI/3;
+   const x=Math.cos(a)*2.15,z=Math.sin(a)*1.12;
+   for(let stack=0;stack<3;stack++)for(let k=0;k<5+stack*2;k++){
+    mesh(new T.CylinderGeometry(.088,.088,.026,16),mat(k%2?'#b52c36':stack===1?'#e0c9a3':'#283b58',.4),x+stack*.19-.18,1.025+k*.027,z);
+   }
+  }
+  // Real modeled hands and forearms belong to the local camera only.
+  const hands=new T.Group();camera.add(hands);world.add(camera);
+  const sleeve=mat('#27202b'),cuff=mat('#e9d9be'),palm=mat('#bd8264');
+  for(const side of [-1,1]){
+   const arm=new T.Group();arm.position.set(side*.66,-.70,-1.05);arm.rotation.z=side*.16;hands.add(arm);
+   const forearm=mesh(new T.CapsuleGeometry(.145,.54,7,12),sleeve,0,-.12,0,arm);forearm.rotation.x=Math.PI/2.7;
+   mesh(new T.CylinderGeometry(.16,.17,.10,16),cuff,0,.14,-.28,arm).rotation.x=Math.PI/2.7;
+   mesh(new T.SphereGeometry(.17,16,12),palm,0,.20,-.36,arm);
+   for(let finger=0;finger<4;finger++){
+    const f=mesh(new T.CapsuleGeometry(.034,.17,4,8),palm,(finger-1.5)*.068,.23,-.53,arm);f.rotation.x=Math.PI/2.4;
+   }
+   const thumb=mesh(new T.CapsuleGeometry(.048,.12,4,8),palm,side*-.16,.19,-.40,arm);thumb.rotation.z=side*.8;
+  }
   const bodies=[];const colors=['#62322f','#254b64','#643b63','#533e2d','#2b6055','#553d73'];
   function character(n){const g=new T.Group();world.add(g);const angle=Math.PI/2+n*Math.PI*2/6;const radius=3.15;g.position.set(Math.cos(angle)*radius,0,Math.sin(angle)*radius*.76);g.rotation.y=Math.atan2(-g.position.x,-g.position.z);
    const coat=mat(colors[n]);const torso=mesh(new T.CylinderGeometry(.34,.48,.9,14),coat,0,1.47,0,g);torso.rotation.x=-.07;
@@ -1748,6 +1783,21 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
    const hat=mesh(new T.CylinderGeometry(.34,.36,.16,20),dark,0,2.45,.03,g);mesh(new T.CylinderGeometry(.48,.48,.035,24),dark,0,2.36,.03,g);
    for(const x of [-.43,.43]){const arm=mesh(new T.CapsuleGeometry(.105,.47,5,9),coat,x,1.24,.29,g);arm.rotation.z=x>0?.55:-.55;mesh(new T.SphereGeometry(.12,10,8),skin,x*1.35,1.03,.48,g);}
    mesh(new T.SphereGeometry(.035,8,6),dark,-.105,2.18,.286,g);mesh(new T.SphereGeometry(.035,8,6),dark,.105,2.18,.286,g);
+   // Detailed 3D facial features, clothing, collars, hair and visible chair backs.
+   const hair=mat(n%2?'#281b19':'#493024'),eyeWhite=mat('#f5e9d5'),iris=mat('#1c1717');
+   mesh(new T.SphereGeometry(.245,18,12),hair,0,2.30,-.04,g).scale.set(1,.42,1);
+   for(const ex of [-.105,.105]){
+    mesh(new T.SphereGeometry(.058,10,8),eyeWhite,ex,2.19,.276,g).scale.set(1,.65,.35);
+    mesh(new T.SphereGeometry(.027,10,8),iris,ex,2.19,.302,g);
+    mesh(new T.BoxGeometry(.12,.023,.032),hair,ex,2.285,.27,g);
+   }
+   mesh(new T.SphereGeometry(.065,12,10),skin,0,2.085,.302,g).scale.set(.8,1.15,.85);
+   mesh(new T.BoxGeometry(.17,.026,.027),mat('#54262a'),0,1.98,.288,g);
+   mesh(new T.BoxGeometry(.18,.26,.035),mat('#e5d6bf'),0,1.71,.345,g);
+   mesh(new T.BoxGeometry(.065,.23,.045),mat('#a42d37'),0,1.64,.379,g);
+   mesh(new T.BoxGeometry(.76,.95,.14),wood,0,1.18,-.48,g);
+   for(const leg of [-.21,.21])mesh(new T.CapsuleGeometry(.12,.54,5,10),coat,leg,.66,.22,g).rotation.x=-.35;
+
    const label=document.createElement('canvas');label.width=256;label.height=64;const cx=label.getContext('2d');cx.fillStyle='#160d12';cx.fillRect(0,0,256,64);cx.strokeStyle='#e1ad68';cx.lineWidth=4;cx.strokeRect(2,2,252,60);cx.fillStyle='#ffe0a6';cx.font='bold 24px Arial';cx.textAlign='center';cx.fillText('SEAT '+(n+1),128,41);
    const tex=new T.CanvasTexture(label);const tag=new T.Sprite(new T.SpriteMaterial({map:tex,depthTest:false}));tag.scale.set(1.35,.34,1);tag.position.set(0,2.85,0);g.add(tag);
    bodies.push({g,tag,canvas:label,ctx:cx,tex,n});
@@ -1756,13 +1806,55 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
   // Dealer at the far end of the room, separate from the six player chairs.
   const dealer=new T.Group();dealer.position.set(0,0,-4.55);world.add(dealer);
   mesh(new T.CylinderGeometry(.38,.48,1.1,16),mat('#222028'),0,1.5,0,dealer);mesh(new T.SphereGeometry(.31,18,12),skin,0,2.32,0,dealer);mesh(new T.CylinderGeometry(.43,.43,.10,22),dark,0,2.63,0,dealer);
-  function resize(){const w=host.clientWidth,h=host.clientHeight;if(w<1||h<1)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<600?66:59;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(host);resize();
+  // v0.4.21: Dealer's own overhead camera, independently rendered in a small monitor.
+  const dealerMonitor=document.createElement('section');dealerMonitor.id='dealerMonitor3d';dealerMonitor.setAttribute('aria-label','Dealer camera showing community cards');
+  dealerMonitor.innerHTML='<div class="dealerMonitorTitle">● VINNY CAM <span>COMMUNITY CARDS</span></div><canvas aria-label="Dealer overhead view"></canvas><div class="dealerMonitorCards" aria-live="polite"></div>';
+  host.appendChild(dealerMonitor);
+  const dealerCanvas=dealerMonitor.querySelector('canvas');
+  let dealerRenderer=null;
+  try {dealerRenderer=new T.WebGLRenderer({canvas:dealerCanvas,antialias:true,alpha:false});dealerRenderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));}catch(e){dealerMonitor.querySelector('.dealerMonitorTitle').textContent='VINNY CAM · CARDS';}
+  const dealerCamera=new T.PerspectiveCamera(48,1,.1,30);
+  dealerCamera.position.set(0,4.1,-1.75);dealerCamera.lookAt(0,.9,.12);
+  let monitorWidth=0,monitorHeight=0;
+  function sizeDealer(){if(!dealerRenderer)return;const w=dealerCanvas.clientWidth,h=dealerCanvas.clientHeight;if(w!==monitorWidth||h!==monitorHeight){monitorWidth=w;monitorHeight=h;dealerRenderer.setSize(w,h,false);dealerCamera.aspect=w/Math.max(1,h);dealerCamera.updateProjectionMatrix();}}
+  let lastBoardSignature='';
+  function updateDealerCards(){
+    const nodes=[...host.querySelectorAll('#boardCards .pcard:not(.blank)')];
+    const signature=nodes.map(n=>n.textContent.trim()).join('|');
+    if(signature===lastBoardSignature)return;lastBoardSignature=signature;
+    const out=dealerMonitor.querySelector('.dealerMonitorCards');out.replaceChildren();
+    for(let i=0;i<5;i++){
+      const card=document.createElement('div');card.className='dealerMiniCard';
+      if(nodes[i]){card.textContent=nodes[i].textContent.trim().replace(/\s+/g,' ');if(nodes[i].classList.contains('red'))card.classList.add('red');}
+      else {card.textContent='?';card.classList.add('pending');}
+      out.append(card);
+    }
+  }
+  // Rigged upper-body animation: turns, reaching for chips, folding and celebrating.
+  const rigs=bodies.map(({g})=>({g,arms:[...g.children].filter(o=>o.geometry?.type==='CapsuleGeometry'&&o.position.y>1),head:g.children.find(o=>o.geometry?.type==='SphereGeometry'&&o.position.y>2)}));
+  const lastActions=new Map(),actionTimes=new Map();
+  function animatePlayers(t){
+    const seats=[...host.querySelectorAll('.seat')];
+    for(const seat of seats){
+      const match=seat.className.match(/pov([0-5])/);if(!match)continue;
+      const n=Number(match[1]),rig=rigs[n];if(!rig)continue;
+      const action=(seat.querySelector('.lastMove')?.textContent||'').trim();
+      if(action!==lastActions.get(n)){lastActions.set(n,action);actionTimes.set(n,t);}
+      const age=(t-(actionTimes.get(n)||0))/1000,phase=Math.max(0,1-age/1.1);
+      const fold=/fold/i.test(action),bet=/bet|raise|call|all.in/i.test(action),win=/win|won|collect/i.test(action),check=/check/i.test(action);
+      const impulse=Math.sin(Math.min(1,age/.55)*Math.PI)*phase;
+      rig.g.rotation.z=Math.sin(t*.0012+n)*.012+(win?impulse*.07:0);
+      if(rig.head)rig.head.rotation.y=Math.sin(t*.0008+n)*.12;
+      rig.arms.forEach((arm,i)=>{const side=i?1:-1;arm.rotation.x=(bet?-.8:fold?.6:check?-.32:win?-1.0:0)*impulse;arm.rotation.z=side*(.55+(win?-.35*impulse:0));});
+    }
+  }
+  function resize(){const w=host.clientWidth,h=host.clientHeight;if(w<1||h<1)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<600?69:60;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(host);resize();
   const table=host.querySelector('.tableWrap');let yaw=0,prevYaw=NaN;
-  function update(){const raw=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;yaw=Math.max(-70,Math.min(70,-raw))*Math.PI/180;camera.rotation.set(-.33,yaw,0,'YXZ');
+  function update(){const raw=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;yaw=Math.max(-70,Math.min(70,-raw))*Math.PI/180;camera.rotation.set(-.37,yaw,0,'YXZ');hands.position.y=Math.sin(performance.now()*.0014)*.007;
    const seats=host.querySelectorAll('.seat');for(const s of seats){const match=s.className.match(/pov([0-5])/);if(!match)continue;const b=bodies[Number(match[1])];if(!b)continue;const name=s.querySelector('.seatName')?.textContent?.trim()||'EMPTY';if(b.currentName!==name){b.currentName=name;const ctx=b.ctx;ctx.clearRect(0,0,256,64);ctx.fillStyle='#160d12';ctx.fillRect(0,0,256,64);ctx.strokeStyle='#e1ad68';ctx.lineWidth=4;ctx.strokeRect(2,2,252,60);ctx.fillStyle='#ffe0a6';ctx.font='bold 23px Arial';ctx.textAlign='center';ctx.fillText(name.slice(0,16),128,41);b.tex.needsUpdate=true;}b.g.visible=Number(match[1])!==0&&!!name&&!/empty/i.test(name);}
    const shown=host.querySelectorAll('#boardCards .pcard:not(.blank)');board.forEach((b,i)=>{b.visible=i<shown.length;});
   }
-  let frames=0;function animate(t){requestAnimationFrame(animate);if(!document.getElementById('tableScreen').classList.contains('active'))return;update();bodies.forEach((b,i)=>{b.g.position.y=Math.sin(t*.0016+i)*.018;});renderer.render(world,camera);if(frames++===2)status.textContent='3D ROOM · DRAG TO LOOK AROUND';}requestAnimationFrame(animate);
+  let frames=0;function animate(t){requestAnimationFrame(animate);if(!document.getElementById('tableScreen').classList.contains('active'))return;update();bodies.forEach((b,i)=>{b.g.position.y=Math.sin(t*.0016+i)*.018;});animatePlayers(t);updateDealerCards();renderer.render(world,camera);if(dealerRenderer){sizeDealer();dealerRenderer.render(world,dealerCamera);}if(frames++===2)status.textContent='3D ROOM · DRAG TO LOOK AROUND';}requestAnimationFrame(animate);
   let down=null;canvas.addEventListener('pointerdown',e=>{down={x:e.clientX,y:e.clientY};});canvas.addEventListener('pointerup',e=>{if(!down)return;const dx=e.clientX-down.x;down=null;if(Math.abs(dx)<12)return;const current=parseFloat(table.style.getPropertyValue('--cameraYaw'))||0;table.style.setProperty('--cameraYaw',Math.max(-70,Math.min(70,current+dx*.14))+'deg');});
  }
  const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js';script.onload=boot;script.onerror=()=>{status.textContent='3D ENGINE NEEDS INTERNET';host.querySelector('.tableWrap').style.setProperty('visibility','visible','important');};document.head.append(script);
@@ -1798,4 +1890,50 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
  setInterval(sync,700);sync();
 })();
 </script>
+
+<style id="private-card-peek-v0419">
+/* Local-only card peek: no game action or network message is emitted. */
+#tableScreen .myHoleHUD{perspective:650px;transform-style:preserve-3d}
+#tableScreen .myHoleHUD .myHoleCards{transform-origin:50% 100%;transition:transform .3s ease,filter .3s ease,opacity .2s ease}
+#tableScreen .myHoleHUD:not(.revealed) .myHoleCards{display:flex!important;opacity:0;transform:rotateX(76deg) translateY(22px);pointer-events:none}
+#tableScreen .myHoleHUD.peek-active .myHoleCards{animation:privateCardLift .8s cubic-bezier(.2,.75,.2,1) both!important;opacity:1!important;display:flex!important}
+#tableScreen .myHoleHUD.peek-active .myHoleCards .pcard:first-child{transform:rotate(-12deg) translate(-4px,-6px)}
+#tableScreen .myHoleHUD.peek-active .myHoleCards .pcard:last-child{transform:rotate(12deg) translate(4px,-6px)}
+#tableScreen .myHoleHUD .myHoleCards .pcard{transition:transform .35s ease}
+#tableScreen .myHoleHUD .peekHand{position:absolute;bottom:-13px;width:58px;height:30px;background:linear-gradient(150deg,#e1aa82,#986044);border:2px solid #593523;border-radius:42% 40% 25% 20%;opacity:0;pointer-events:none;z-index:48;box-shadow:0 5px 8px #0009}
+#tableScreen .myHoleHUD .peekHand.left{left:-22px;transform:rotate(-22deg)}
+#tableScreen .myHoleHUD .peekHand.right{right:-22px;transform:rotate(22deg)}
+#tableScreen .myHoleHUD.peek-active .peekHand{opacity:1;animation:privateHandLift .8s ease both}
+@keyframes privateCardLift{0%{transform:rotateX(76deg) translateY(22px)}55%{transform:rotateX(-18deg) translateY(-13px)}100%{transform:rotateX(0deg) translateY(0)}}
+@keyframes privateHandLift{0%{opacity:0;translate:0 24px}45%{opacity:1;translate:0 -11px}100%{opacity:1;translate:0 0}}
+@media(prefers-reduced-motion:reduce){#tableScreen .myHoleHUD.peek-active .myHoleCards,#tableScreen .myHoleHUD.peek-active .peekHand{animation:none!important}}
+</style>
+<script id="private-card-peek-controller-v0419">
+(function(){
+ const hud=document.querySelector('#tableScene .myHoleHUD');
+ const controls=document.querySelector('#tableScreen .cardPeekControls');
+ if(!hud||!controls)return;
+ for(const side of ['left','right']){const hand=document.createElement('span');hand.className='peekHand '+side;hand.setAttribute('aria-hidden','true');hud.appendChild(hand)}
+ const button=controls.querySelector('button');if(!button)return;
+ let timer;
+ function animatePeek(){
+   if(!hud.classList.contains('revealed')){hud.classList.remove('peek-active');return;}
+   hud.classList.remove('peek-active');void hud.offsetWidth;hud.classList.add('peek-active');
+   clearTimeout(timer);timer=setTimeout(()=>hud.classList.remove('peek-active'),850);
+ }
+ // The existing button remains the only reveal control; animation is purely local.
+ button.addEventListener('click',()=>{requestAnimationFrame(()=>{if(hud.classList.contains('revealed'))animatePeek();else{clearTimeout(timer);hud.classList.remove('peek-active')}})});
+ button.setAttribute('aria-label','Privately show or hide your two cards');
+})();
+</script>
+<style id="dealer-monitor-and-animated-characters-v0421">
+#tableScreen .tableScene #dealerMonitor3d{position:absolute;z-index:22;top:10px;right:10px;width:clamp(145px,29%,265px);background:#120d13f2;border:2px solid #bb8b55;border-radius:9px;box-shadow:0 5px 20px #000b;overflow:hidden;pointer-events:none}
+#dealerMonitor3d .dealerMonitorTitle{display:flex;justify-content:space-between;gap:4px;background:#301b20;color:#ffd9a2;font-size:clamp(8px,1.1vw,11px);font-weight:900;padding:5px 7px;letter-spacing:.06em}
+#dealerMonitor3d .dealerMonitorTitle span{font-size:9px;color:#d3b693}
+#dealerMonitor3d canvas{display:block;width:100%;height:clamp(88px,12vw,145px);background:#251915}
+#dealerMonitor3d .dealerMonitorCards{display:flex;gap:3px;justify-content:center;padding:5px 3px 7px}
+#dealerMonitor3d .dealerMiniCard{background:#f7ead2;color:#19131a;border:1px solid #9c7c55;border-radius:3px;width:19%;min-width:0;min-height:28px;display:grid;place-items:center;font:bold clamp(10px,1.7vw,15px) Georgia,serif;white-space:nowrap}
+#dealerMonitor3d .dealerMiniCard.red{color:#bd2630}#dealerMonitor3d .dealerMiniCard.pending{background:#355443;color:#c2d6ba;border:1px dashed #d1b780}
+@media(max-width:600px){#tableScreen .tableScene #dealerMonitor3d{width:145px;right:6px;top:6px}#dealerMonitor3d canvas{height:85px}#dealerMonitor3d .dealerMonitorTitle span{font-size:7px}#dealerMonitor3d .dealerMiniCard{min-height:25px;font-size:11px}}
+</style>
 </body></html>

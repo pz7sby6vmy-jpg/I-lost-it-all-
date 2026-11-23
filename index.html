@@ -1853,7 +1853,32 @@ function seats(){const arr=[];for(let i=0;i<6;i++){const el=host.querySelector('
 function cardsFrom(root){return Array.from(root.querySelectorAll('.pcard:not(.blank)')).map(el=>({rank:el.querySelector('span')?.textContent?.trim()||'',suit:el.querySelector('b')?.textContent?.trim()||''})).filter(c=>c.rank&&c.suit);}
 function board(){const el=host.querySelector('#boardCards');return el?cardsFrom(el).slice(0,5):[];}
 function hole(){const el=host.querySelector('.seat.you .seatCards');return el?cardsFrom(el).slice(0,2):[];}
-function chips(x,z,amount){if(!amount)return;const colors=['#f3e4c5','#bb283c','#2e5d99','#2d7f56','#d5ad58'];const stacks=Math.max(1,Math.min(4,Math.ceil(amount/700)));for(let s=0;s<stacks;s++){const rows=Math.max(1,Math.min(5,Math.ceil(amount/(stacks*220))-s%2));const col=s%2,row=Math.floor(s/2);const sx=x+(col-.5)*.34;const sz=z+row*.28;for(let j=0;j<rows;j++){const yy=1.126+j*.042;obj('cylinder',sx,yy,sz,.15,.042,.15,colors[(s+j)%colors.length]);if(j===rows-1)obj('cylinder',sx,yy+.024,sz,.128,.006,.128,'#f7ead2');}}}
+function chips(x,z,amount){
+ if(!amount)return;
+ const palette=['#e3decf','#b72b3d','#2f6395','#2a805f','#222735','#c49a44'];
+ const bands=['#b8a681','#e6bfad','#d6e5ea','#dae1c1','#c2a67c','#f6dea7'];
+ const count=Math.max(1,Math.min(4,Math.ceil(amount/650)));
+ for(let stack=0;stack<count;stack++){
+  const col=stack%2,row=Math.floor(stack/2),sx=x+(col-.5)*.32,sz=z+row*.30;
+  const tier=Math.min(5,Math.floor(Math.log10(Math.max(1,amount/count))/1.1));
+  const n=Math.min(7,Math.max(2,Math.ceil(amount/(count*140))+(stack%2)));
+  const base=palette[tier],edge=bands[tier];
+  obj('cylinder',sx,1.102,sz,.205,.012,.205,'#182a24');
+  for(let j=0;j<n;j++){
+   const cy=1.119+j*.037;
+   obj('cylinder',sx,cy,sz,.185,.032,.185,base);
+   obj('cylinder',sx,cy+.015,sz,.154,.006,.154,edge);
+   // Four edge spots are readable from any seat and resemble striped casino chips.
+   if(j===0||j===n-1||j%2===0)for(let k=0;k<4;k++){
+    const a=k*Math.PI/2+stack*.19;
+    obj('box',sx+Math.cos(a)*.082,cy,sz+Math.sin(a)*.082,.027,.018,.027,'#f5e9d4',a);
+   }
+  }
+  const top=1.119+(n-1)*.037+.019;
+  obj('cylinder',sx,top,sz,.117,.005,.117,'#f3e3c5');
+  obj('cylinder',sx,top+.004,sz,.073,.005,.073,base);
+ }
+}
 function avatar(i,x,z,name,t,dealer=false){
  const n=String(name||'').toLowerCase();
  const archetype=dealer?6:/duke|dusty|cowboy/.test(n)?0:/ruby|rose|scarlet/.test(n)?1:/mack|big|bruiser/.test(n)?2:/vex|voltage|punk/.test(n)?3:/gold|grandpa|old/.test(n)?4:/slick|vincent|shark/.test(n)?5:(Array.from(n).reduce((a,c)=>a+c.charCodeAt(0),0)%6);
@@ -1895,7 +1920,16 @@ function avatar(i,x,z,name,t,dealer=false){
  part('sphere',0,torsoY+.18,.25,.30*w,.30*h,.13,st.vest);
  part('sphere',0,torsoY+.38,.36,.12*w,.18,.04,st.shirt);
  for(let q=0;q<3;q++)part('sphere',0,torsoY+.40-q*.10,.43,.020,.023,.013,st.trim);
- if(dealer)part('sphere',0,torsoY+.39,.44,.045,.16,.020,'#af2a35');
+ if(dealer){
+  // Silk lapels, white collar, tie and gold pocket chain set Vinny apart as dealer.
+  for(const side of [-1,1]){
+    part('sphere',side*.21,torsoY+.27,.36,.10,.25,.035,'#b5a5a2');
+    part('sphere',side*.27,torsoY+.42,.29,.067,.12,.023,'#f3e6d4');
+  }
+  part('sphere',0,torsoY+.37,.44,.048,.20,.023,'#b82b3a');
+  part('sphere',0,torsoY+.18,.43,.058,.065,.018,'#d5a954');
+  part('sphere',.27,torsoY+.29,.40,.078,.029,.018,'#f1e6d5');
+ }
  part('cylinder',0,1.97+by,.06,.10,.06,.10,st.skin);
  
  // head - tight, cohesive face
@@ -1909,10 +1943,23 @@ function avatar(i,x,z,name,t,dealer=false){
    part('sphere',side*.12,headY+.11-(angry?react*.04:0)+(laugh?react*.02:0),.32,.09,.015,.018,st.hair); // brows
    part('sphere',side*.08,headY-.03,.34,.018,.028,.014,'#c07a64'); // cheek tint
  }
+ // Subtle cheekbones, nose bridge and eyelids are embedded into the face, not floating in front.
+ for(const side of [-1,1]){
+   part('sphere',side*.18,headY-.10,.205,.105,.075,.14,st.skin);
+   part('sphere',side*.11,headY+.074,.299,.065,.018,.023,st.skin);
+ }
+ part('sphere',0,headY+.015,.285,.040,.085,.055,st.skin); // bridge
  part('sphere',0,headY-.02,.34,.055,.10,.05,st.skin); // nose
  part('sphere',0,headY-.18-(laugh?.04:angry?-.02:0),.31,.12,.014+mouthOpen,.020,angry?'#6d3533':'#7a403d'); // mouth
- if(st.beard){part('sphere',0,headY-.26,.18,st.beard===2?.24:.18,st.beard===2?.12:.07,.18,st.hair);for(const side of [-1,1])part('sphere',side*.09,headY-.17,.33,.08,.022,.028,st.hair);} 
- if(st.glasses){for(const side of [-1,1])part('sphere',side*.11,headY+.03,.36,.12,.070,.012,'#c4b089');part('box',0,headY+.03,.36,.07,.012,.016,'#c4b089');}
+ if(laugh)part('sphere',0,headY-.205,.333,.085,.010,.009,'#f1e4d3');
+ if(archetype===4){for(const side of [-1,1])part('sphere',side*.17,headY-.10,.282,.060,.009,.015,'#a97d6a');} // age lines
+ if(st.beard){part('sphere',0,headY-.26,.18,st.beard===2?.24:.18,st.beard===2?.12:.07,.18,st.hair);for(const side of [-1,1])part('sphere',side*.09,headY-.17,.33,.08,.022,.028,st.hair);}
+ if(dealer){
+  for(const side of [-1,1])part('sphere',side*.075,headY-.117,.339,.095,.031,.04,'#292124');
+  part('sphere',0,headY-.285,.24,.16,.10,.13,'#292124');
+  part('sphere',-.30,headY+.03,.035,.047,.050,.045,'#d0a262');
+ } 
+ if(st.glasses){for(const side of [-1,1])part('sphere',side*.11,headY+.03,.36,.095,.063,.013,'#c4b089');part('box',0,headY+.03,.36,.07,.012,.016,'#c4b089');}
  
  // distinct hair / hats
  if(st.hairStyle===1){part('sphere',-.18,headY+.16,-.05,.18,.26,.15,st.hair);part('sphere',.20,headY+.20,.00,.14,.18,.14,st.hair);} 
@@ -1978,7 +2025,7 @@ function table(){
  for(const x of [-2.18,2.18])for(const z of [-1.05,1.05])obj('cylinder',x,.35,z,.32,.7,.32,'#32221e');
 }
 function card(x,z,c,face=true,rotation=0,scaleFactor=1){obj('plane',x,1.086,z,.39*scaleFactor,1,.56*scaleFactor,'#ffffff',rotation,cardTexture(c?.rank,c?.suit,!face));}
-function drawCards(seatData,shown,t){const hand=host.querySelector('.roundInfo')?.textContent||'';const key=hand.split('·')[0]||'';if(key!==handPrev){handPrev=key;dealStart=t;}for(let i=1;i<=5;i++){if(!seatData[i].active)continue;const [x,z]=cardPositions[i];for(let j=0;j<2;j++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*135-j*850)/360));if(wait<=0)continue;const start=[0,-1.48],spread=i===3?.52:.46,xx=start[0]+(x+(j-.5)*spread-start[0])*wait,zz=start[1]+(z-(j===0?.05:-.05)-start[1])*wait;card(xx,zz,null,false,0,.93);}}const peek=host.querySelector('.myHoleHUD')?.classList.contains('revealed');const own=hole();for(let i=0;i<2;i++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*850)/360));if(wait<=0)continue;card((i-.5)*.50,1.44,own[i],!!(peek&&own[i]),0,1.04);}for(let i=0;i<shown.length;i++){card((i-2)*.53,-.18,shown[i],true,0,1.14);}}
+function drawCards(seatData,shown,t){const hand=host.querySelector('.roundInfo')?.textContent||'';const key=hand.split('·')[0]||'';if(key!==handPrev){handPrev=key;dealStart=t;}for(let i=1;i<=5;i++){if(!seatData[i].active)continue;const [x,z]=cardPositions[i];for(let j=0;j<2;j++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*135-j*850)/360));if(wait<=0)continue;const start=[0,-1.48],spread=i===3?.52:.46,xx=start[0]+(x+(j-.5)*spread-start[0])*wait,zz=start[1]+(z-(j===0?.05:-.05)-start[1])*wait;card(xx,zz,null,false,0,.93);}}const peek=host.querySelector('.myHoleHUD')?.classList.contains('revealed');const own=hole();for(let i=0;i<2;i++){const wait=Math.max(0,Math.min(1,(t-dealStart-300-i*850)/360));if(wait<=0)continue;card((i-.5)*.50,1.44,own[i],!!(peek&&own[i]),0,1.04);}for(let i=0;i<shown.length;i++){const cx=(i-2)*.56;obj('plane',cx,1.084,-.18,.48,1,.68,'#172b20');card(cx,-.18,shown[i],true,0,1.19);}}
 function hands(t){
  // Rounded wrist/cuff/palm articulation follows the table rail, never the chip piles.
  const skin='#c59072',highlight='#ddb08f',sleeve='#352839';
@@ -2016,8 +2063,22 @@ function monitor(shown){
  if(label)label.textContent=shown.length===0?'WAITING FOR FLOP':shown.length===3?'FLOP · 3 CARDS':shown.length===4?'TURN · 4 CARDS':shown.length===5?'RIVER · 5 CARDS':'DEALING';
 }
 function size(){const rect=host.getBoundingClientRect();const ratio=Math.min(window.devicePixelRatio||1,window.innerWidth<700?1:1.3),w=Math.max(2,Math.round(rect.width*ratio)),h=Math.max(2,Math.round(rect.height*ratio));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);}gl.uniformMatrix4fv(U.projection,false,perspective((window.innerWidth<700?68:60)*Math.PI/180,w/h,.08,40));}
-function frame(t){requestAnimationFrame(frame);if(!screen.classList.contains('active')||host.classList.contains('poker3d-fallback'))return;if(t-lastRendered<50)return;lastRendered=t;try{size();gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(U.view,false,lookAt([Math.sin(yaw)*.20,2.10,4.05],[Math.sin(yaw)*2.90,1.48,-.28]));const data=seats(),shown=board();room(t);table();for(let i of [3,2,4,1,5])if(data[i].active){const [x,z]=seatPositions[i];avatar(i,x,z,data[i].name,t);}avatar(7,0,-3.65,'VINNY',t,true);for(let i=1;i<=5;i++)if(data[i].active){const [x,z]=chipPositions[i];chips(x,z,data[i].stack);}chips(chipPositions[0][0],chipPositions[0][1],data[0].stack);drawCards(data,shown,t);hands(t);monitor(shown);if(frames++===2){status.textContent='3D POKER ROOM · READY';status.style.opacity='0';}if(gl.isContextLost())throw Error('WebGL context lost');}catch(e){console.error('[Poker 3D] Render error',e);recover(e.message||String(e));}}
-const monitorNode=document.createElement('section');monitorNode.id='dealerMonitor3d';monitorNode.innerHTML='<div class="dealerMonitorTitle"><span class="dealerLight">●</span> VINNY CAM <span>DEALER VIEW</span></div><div class="dealerMonitorStatus">WAITING FOR FLOP</div><div class="dealerMonitorCards"></div>';host.append(monitorNode);
+function frame(t){requestAnimationFrame(frame);if(!screen.classList.contains('active')||host.classList.contains('poker3d-fallback'))return;if(t-lastRendered<50)return;lastRendered=t;try{size();gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.uniformMatrix4fv(U.view,false,lookAt([Math.sin(yaw)*.20,2.10,4.05],[Math.sin(yaw)*2.90,1.48,-.28]));const data=seats(),shown=board();room(t);table();for(let i of [3,2,4,1,5])if(data[i].active){const [x,z]=seatPositions[i];avatar(i,x,z,data[i].name,t);}avatar(7,0,-3.65,'VINNY',t,true);for(let i=1;i<=5;i++)if(data[i].active){const [x,z]=chipPositions[i];chips(x,z,data[i].stack);}chips(chipPositions[0][0],chipPositions[0][1],data[0].stack);drawCards(data,shown,t);hands(t);monitor(shown);updatePublicBoard(shown);if(frames++===2){status.textContent='3D POKER ROOM · READY';status.style.opacity='0';}if(gl.isContextLost())throw Error('WebGL context lost');}catch(e){console.error('[Poker 3D] Render error',e);recover(e.message||String(e));}}
+const publicBoardHUD=document.createElement('section');
+ publicBoardHUD.id='poker3dPublicBoard';publicBoardHUD.setAttribute('aria-label','Community cards visible from every camera angle');
+ publicBoardHUD.innerHTML='<div class="publicBoardTitle">COMMUNITY CARDS</div><div class="publicBoardCards"></div>';
+ host.append(publicBoardHUD);
+ let publicBoardKey='';
+ function updatePublicBoard(cards){
+  const next=JSON.stringify(cards);if(next===publicBoardKey)return;publicBoardKey=next;
+  const row=publicBoardHUD.querySelector('.publicBoardCards');row.replaceChildren();
+  for(let i=0;i<5;i++){
+   const c=cards[i],el=document.createElement('span');
+   el.className='publicBoardCard'+(!c?' pending':/[HD♥♦]/.test(c.suit)?' red':'');
+   el.textContent=c?String(c.rank)+(suits[c.suit]||c.suit):'·';row.append(el);
+  }
+ }
+ const monitorNode=document.createElement('section');monitorNode.id='dealerMonitor3d';monitorNode.innerHTML='<div class="dealerMonitorTitle"><span class="dealerLight">●</span> VINNY CAM <span>DEALER VIEW</span></div><div class="dealerMonitorStatus">WAITING FOR FLOP</div><div class="dealerMonitorCards"></div>';host.append(monitorNode);
 canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};try{canvas.setPointerCapture(e.pointerId);}catch(_){};});canvas.addEventListener('pointerup',e=>{if(!drag)return;const dx=e.clientX-drag.x;drag=null;yaw=Math.max(-.62,Math.min(.62,yaw+dx*.0032));});
 const left=document.getElementById('povLeft'),right=document.getElementById('povRight'),center=document.getElementById('povCenter');left?.addEventListener('click',()=>yaw=Math.max(-.62,yaw-.18));right?.addEventListener('click',()=>yaw=Math.min(.62,yaw+.18));center?.addEventListener('click',()=>yaw=0);
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();recover('Graphics context lost');});
@@ -2147,6 +2208,24 @@ window.addEventListener('resize',size,{passive:true});gl.enableVertexAttribArray
  #tableScreen #dealerMonitor3d .dealerMiniCard{font-size:11px!important}
 }
 @media(prefers-reduced-motion:reduce){#tableScreen #dealerMonitor3d .dealerLight{animation:none}}
+</style>
+
+<style id="poker3d-detail-pass-v0445">
+#tableScreen #poker3dPublicBoard{position:absolute;left:10px;top:10px;z-index:16;pointer-events:none;
+ background:linear-gradient(135deg,#22141eea,#130e12e8);border:1px solid #ba8d57;border-radius:9px;padding:7px 9px;
+ box-shadow:0 4px 12px #000a;max-width:calc(100% - 205px)}
+#poker3dPublicBoard .publicBoardTitle{font:800 10px system-ui,sans-serif;letter-spacing:.11em;color:#ebc99d;margin-bottom:5px}
+#poker3dPublicBoard .publicBoardCards{display:flex;gap:3px;align-items:center}
+#poker3dPublicBoard .publicBoardCard{width:31px;height:42px;box-sizing:border-box;display:grid;place-items:center;border:1px solid #b59a76;border-radius:4px;background:#fff0d1;color:#232029;font:bold 14px Georgia,serif;box-shadow:0 2px 4px #0008}
+#poker3dPublicBoard .publicBoardCard.red{color:#a51c30}
+#poker3dPublicBoard .publicBoardCard.pending{background:#315241;border:1px dashed #b9ae8b;color:#a8b7a5}
+#tableScreen .tableScene.poker3d-fallback #poker3dPublicBoard{display:none}
+@media(max-width:600px){
+ #tableScreen #poker3dPublicBoard{left:5px;top:7px;padding:5px;max-width:calc(100% - 163px)}
+ #poker3dPublicBoard .publicBoardTitle{font-size:8px;letter-spacing:.05em}
+ #poker3dPublicBoard .publicBoardCards{gap:2px}
+ #poker3dPublicBoard .publicBoardCard{width:23px;height:34px;font-size:11px}
+}
 </style>
 </body></html>
 <style id="poker3d-mobile-reliability-v0435">

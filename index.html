@@ -1406,4 +1406,163 @@ if(new URLSearchParams(location.search).has('test'))window.__LITA_TEST__={value5
  new MutationObserver(decorate).observe(seats,{childList:true});decorate();
 })();
 </script>
+<style>
+/* v0.4.10 — reactive head tracking: speakers, bettors and dealer */
+#tableScreen .seat .toon-head{transform-box:view-box;transform-origin:50% 34%;transition:transform .42s cubic-bezier(.2,.8,.2,1)}
+#tableScreen .seat .toon-eyes{transition:transform .3s ease}
+#tableScreen .seat.head-attending .toon-head{transform:rotate(var(--headTilt,0deg)) translateX(var(--headSlide,0px)) scaleX(var(--headScale,1))}
+#tableScreen .seat.head-attending .toon-eyes{transform:translateX(var(--eyeShift,0px))}
+#tableScreen .seat.is-talking .toon-head{animation:headTalking .65s ease-in-out infinite alternate}
+#tableScreen .seat.acting .toon-head{filter:drop-shadow(0 0 3px #ffd17a)}
+@keyframes headTalking{from{translate:0 0}to{translate:0 -2px}}
+@media(prefers-reduced-motion:reduce){#tableScreen .seat .toon-head,#tableScreen .seat .toon-eyes{transition:none!important;animation:none!important}}
+</style>
+<script>
+/* Observe the actual rendered seats so host, guests and solo AI see the same action. */
+(function(){
+ const seats=document.getElementById('seats');if(!seats)return;
+ let scheduled=false;
+ function update(){
+  scheduled=false;
+  const all=Array.from(seats.querySelectorAll('.seat[data-seat]'));
+  const speaker=all.find(el=>el.classList.contains('is-talking'));
+  const bettor=all.find(el=>el.classList.contains('acting'));
+  const target=speaker||bettor;
+  const targetSeat=target?Number(target.dataset.seat):null;
+  all.forEach(el=>{
+   const seat=Number(el.dataset.seat);
+   const isTarget=el===target;
+   const relative=targetSeat===null?0:((targetSeat-seat+9)%6)-3;
+   const direction=relative===0?0:relative>0?1:-1;
+   const tilt=isTarget?0:direction*10;
+   const slide=isTarget?0:direction*3;
+   const eyes=isTarget?0:direction*2.5;
+   el.classList.toggle('head-attending',target!==null);
+   el.style.setProperty('--headTilt',tilt+'deg');
+   el.style.setProperty('--headSlide',slide+'px');
+   el.style.setProperty('--eyeShift',eyes+'px');
+   el.style.setProperty('--headScale',isTarget?'1':'.96');
+  });
+ }
+ function schedule(){if(scheduled)return;scheduled=true;requestAnimationFrame(update)}
+ new MutationObserver(schedule).observe(seats,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+ schedule();
+})();
+</script>
+
+<style>
+/* v0.4.11 — reactive upper-body turns and expressive poker faces */
+#tableScreen .seat .toon-torso{transform-box:view-box;transform-origin:50% 69%;transition:transform .48s cubic-bezier(.22,.75,.25,1),filter .3s ease;transform:translateX(var(--bodyShift,0px)) skewY(var(--bodyLean,0deg)) scaleX(var(--bodyScale,1))}
+#tableScreen .seat .toon-head{filter:drop-shadow(0 1px 1px #0006);transition:transform .42s ease,filter .3s ease}
+#tableScreen .seat .toon-mouth{transform-box:fill-box;transform-origin:center;transition:transform .22s ease}
+#tableScreen .seat .toon-eyes{transform-box:fill-box;transform-origin:center;transition:transform .25s ease}
+#tableScreen .seat.emote-laugh .toon-mouth,#tableScreen .seat.winner .toon-mouth{transform:scale(1.28,1.65)}
+#tableScreen .seat.emote-angry .toon-eyes,#tableScreen .seat.folded .toon-eyes{transform:scaleY(.67) translateY(2px)}
+#tableScreen .seat.emote-angry .toon-head{filter:drop-shadow(0 0 5px #ed4d37)}
+#tableScreen .seat.emote-laugh .toon-head,#tableScreen .seat.winner .toon-head{filter:drop-shadow(0 0 5px #f6c45b)}
+#tableScreen .seat.emote-slam .toon-torso{animation:bodySlam .42s ease-in-out 2}
+#tableScreen .seat.emote-laugh .toon-torso{animation:bodyLaugh .28s ease-in-out 4}
+#tableScreen .seat.acting .toon-torso{filter:brightness(1.12)}
+@keyframes bodySlam{0%,100%{translate:0 0}45%{translate:0 9px;rotate:3deg}}
+@keyframes bodyLaugh{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@media(prefers-reduced-motion:reduce){#tableScreen .seat .toon-torso,#tableScreen .seat .toon-mouth,#tableScreen .seat .toon-eyes{transition:none!important;animation:none!important}}
+</style>
+<script>
+/* Use existing seat states rather than separate unsynchronized animation data. */
+(function(){
+ const seats=document.getElementById('seats');if(!seats)return;
+ let pending=false;
+ function update(){
+  pending=false;
+  const all=Array.from(seats.querySelectorAll('.seat[data-seat]'));
+  const target=all.find(e=>e.classList.contains('is-talking'))||all.find(e=>e.classList.contains('acting'));
+  const targetSeat=target?Number(target.dataset.seat):null;
+  all.forEach(el=>{
+   const own=Number(el.dataset.seat);
+   const delta=targetSeat===null?0:((targetSeat-own+9)%6)-3;
+   const direction=delta===0?0:delta>0?1:-1;
+   const strong=el.classList.contains('emote-angry')||el.classList.contains('emote-slam');
+   el.style.setProperty('--bodyLean',(direction*(strong?8:5))+'deg');
+   el.style.setProperty('--bodyShift',(direction*(strong?5:3))+'px');
+   el.style.setProperty('--bodyScale',targetSeat===own?'1.035':'1');
+  });
+ }
+ function schedule(){if(!pending){pending=true;requestAnimationFrame(update)}}
+ new MutationObserver(schedule).observe(seats,{childList:true,subtree:true,attributes:true,attributeFilter:['class','data-seat']});
+ schedule();
+})();
+</script>
+
+<style>
+/* v0.4.12 — articulated action arms, card peeks and folding */
+#tableScreen .seatBody .actionArms{position:absolute;inset:0;z-index:7;pointer-events:none;overflow:visible}
+#tableScreen .actionArm{position:absolute;bottom:4%;width:23%;height:62%;transform-origin:50% 92%;transition:transform .25s ease;filter:drop-shadow(1px 3px 2px #0009)}
+#tableScreen .actionArm.left{left:5%;transform:rotate(-27deg)}
+#tableScreen .actionArm.right{right:5%;transform:rotate(27deg)}
+#tableScreen .actionArm .sleeve{position:absolute;bottom:0;left:13%;width:74%;height:72%;background:var(--armCoat,#46324c);border:2px solid #1d111b;border-radius:14px 14px 8px 8px}
+#tableScreen .actionArm .palm{position:absolute;top:0;left:7%;width:86%;height:35%;background:var(--handTone,#c98b65);border:2px solid #2b1717;border-radius:48% 48% 40% 40%}
+#tableScreen .seat.action-bet .actionArm.right{animation:reachPot 1.05s ease-in-out both}
+#tableScreen .seat.action-check .actionArm.right{animation:tapFelt .65s ease-in-out both}
+#tableScreen .seat.action-peek .actionArm.left{animation:peekCards 1.15s ease-in-out both}
+#tableScreen .seat.action-fold .actionArm.right{animation:foldCards 1.1s ease-in-out both}
+#tableScreen .seat.action-fold .seatCards{animation:discardCards 1.1s ease-in-out both}
+#tableScreen .seat.action-peek .seatCards{animation:liftCards 1.15s ease-in-out both}
+#tableScreen .seat.action-bet .playerHand.right,#tableScreen .seat.action-fold .playerHand.right{opacity:0}
+#tableScreen .seat.action-peek .playerHand.left{opacity:0}
+#tableScreen .seat .actionToken{position:absolute;right:-9px;top:12%;z-index:12;font-size:19px;opacity:0;pointer-events:none}
+#tableScreen .seat.action-bet .actionToken{animation:tokenPush 1.05s ease-out both}
+#tableScreen .seat.pov0 .actionArms{display:none}
+#tableScreen .seat.pov0 .selfHands span{transform-origin:50% 100%}
+#tableScreen .seat.pov0.action-bet .selfHands span:last-child{animation:reachPot 1.05s ease-in-out both}
+#tableScreen .seat.pov0.action-peek .selfHands span:first-child{animation:peekCards 1.15s ease-in-out both}
+#tableScreen .seat.pov0.action-fold .selfHands span:last-child{animation:foldCards 1.1s ease-in-out both}
+@keyframes reachPot{0%,100%{transform:rotate(27deg) translateY(0)}35%,65%{transform:rotate(-40deg) translate(-16px,-34px)}}
+@keyframes tapFelt{0%,100%{transform:rotate(27deg)}40%{transform:rotate(-8deg) translateY(-14px)}65%{transform:rotate(5deg) translateY(4px)}}
+@keyframes peekCards{0%,100%{transform:rotate(-27deg)}35%,70%{transform:rotate(28deg) translate(14px,-24px)}}
+@keyframes foldCards{0%,100%{transform:rotate(27deg)}35%{transform:rotate(-35deg) translate(-12px,-20px)}70%{transform:rotate(-55deg) translate(-25px,-34px)}}
+@keyframes discardCards{0%,35%{transform:rotate(7deg);opacity:1}100%{transform:translate(35px,-34px) rotate(40deg);opacity:0}}
+@keyframes liftCards{0%,100%{transform:translateY(0) rotate(7deg)}45%{transform:translateY(-14px) rotate(-7deg)}}
+@keyframes tokenPush{0%{opacity:0;transform:translate(0,15px) scale(.7)}25%{opacity:1}100%{opacity:0;transform:translate(-65px,-48px) scale(.7)}}
+@media(max-width:560px){#tableScreen .seat .actionToken{font-size:12px}}
+@media(prefers-reduced-motion:reduce){#tableScreen .seat .actionArm,#tableScreen .seat .actionToken,#tableScreen .seat .seatCards{animation:none!important}}
+</style>
+<script>
+(function(){
+ const seats=document.getElementById('seats');if(!seats)return;
+ let lastEvent=null,previousHand=null;
+ function decorate(){
+  seats.querySelectorAll('.seat').forEach(el=>{
+   const body=el.querySelector('.seatBody');
+   if(!body||body.querySelector('.actionArms'))return;
+   const arms=document.createElement('div');arms.className='actionArms';arms.setAttribute('aria-hidden','true');
+   arms.innerHTML='<span class="actionArm left"><i class="sleeve"></i><i class="palm"></i></span><span class="actionArm right"><i class="sleeve"></i><i class="palm"></i></span><span class="actionToken">🪙</span>';
+   body.append(arms);
+  });
+ }
+ new MutationObserver(decorate).observe(seats,{childList:true});decorate();
+ // Trigger gestures from the shared public game events, not from local button presses.
+ function animate(v){
+  if(!v)return;
+  decorate();
+  if(previousHand!==null&&previousHand!==v.handNo){
+   v.players.forEach((p,i)=>{if(p.hole?.length){const el=seats.querySelector('[data-seat="'+p.seat+'"]');if(el)gesture(el,'action-peek',1150)}});
+  }
+  previousHand=v.handNo;
+  if(v.eventId===lastEvent)return;
+  lastEvent=v.eventId;
+  const el=seats.querySelector('[data-seat="'+v.actor+'"]');if(!el)return;
+  const action=v.actionType;
+  const name=action==='fold'?'action-fold':action==='raise'||action==='call'?'action-bet':action==='check'?'action-check':null;
+  if(name)gesture(el,name,1150);
+ }
+ function gesture(el,name,duration){
+  el.classList.remove('action-bet','action-fold','action-check','action-peek');
+  void el.offsetWidth;el.classList.add(name);
+  const token=Symbol();el._armGesture=token;
+  setTimeout(()=>{if(el._armGesture===token)el.classList.remove(name)},duration);
+ }
+ const original=renderView;
+ renderView=function(v){original(v);animate(v)};
+})();
+</script>
 </body></html>
